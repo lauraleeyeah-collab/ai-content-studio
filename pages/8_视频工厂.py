@@ -13,6 +13,7 @@ import streamlit as st
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from agents.video_script_storyboarder import generate_video_script, DURATION_TEMPLATES
+from agents.video_gen_prompt_builder import build_video_gen_prompts, build_prompt_export_markdown, get_model_options
 from agents.video_play_optimizer import optimize_video_play
 from agents.video_interaction_strategist import generate_video_interaction
 from agents.title_optimizer import generate_title_variants
@@ -63,8 +64,8 @@ if demo_on and not vf.get("topic"):
         vf["topic"] = dict(DEMO_TOPIC)
         st.rerun()
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["① 视频选题", "② 分镜脚本", "③ 标题与封面", "④ 播放优化", "⑤ 互动策略"]
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+    ["① 视频选题", "② 分镜脚本", "③ 标题与封面", "④ 播放优化", "⑤ 互动策略", "⑥ 视频生成提示词"]
 )
 
 # ══════════════ Step 1: 视频选题 ══════════════
@@ -294,3 +295,63 @@ with tab5:
             st.markdown("**风险规避：**")
             for r in interaction.get("risk_notes", []):
                 st.markdown(f"- {r}")
+
+
+# ══════════════ Step 6: 视频生成提示词 ══════════════
+with tab6:
+    st.subheader("视频生成提示词（导出给 AI 视频模型）")
+    st.caption(
+        "把分镜脚本一键转成 6 个国产视频模型（可灵/Seedance/万相/混元/海螺/Vidu）可直接粘贴的提示词。"
+        "不调用生成 API，只产出提示词，你拿去模型工具里生成。"
+    )
+
+    if not vf.get("script"):
+        st.info("请先在②生成分镜脚本。")
+    else:
+        gen_model = st.selectbox("目标模型", get_model_options(), index=0, key="vf_gen_model",
+                                 format_func=lambda m: f"{m}")
+        if st.button("生成视频提示词", key="btn_vf_genprompt", type="primary"):
+            with st.spinner(f"AI 正在把分镜转换为{gen_model}提示词..."):
+                try:
+                    gen_result = build_video_gen_prompts(
+                        gen_model, vf["script"].get("storyboard", []),
+                        vf["topic"]["title"], vf["duration"],
+                    )
+                    vf["gen_prompts"] = gen_result
+                    st.success("视频生成提示词已生成。")
+                except Exception as e:
+                    st.error(f"提示词生成失败：{e}")
+
+        gen_result = vf.get("gen_prompts")
+        if gen_result:
+            checks = gen_result.get("checks", {}).get("structure", {})
+            if checks.get("passed"):
+                st.success(f"结构校验通过：{checks['shot_count']} 个镜头提示词，时间轴与分镜一致。")
+            else:
+                st.error("结构校验未通过：" + "；".join(checks.get("issues", [])))
+
+            st.markdown("**全局一致性提示词（所有镜头共用）：**")
+            st.code(gen_result.get("global_style_prompt", ""), language="markdown")
+            st.markdown(f"**通用负向提示词：** `{gen_result.get('negative_base', '')}`")
+
+            st.markdown("**分镜头提示词：**")
+            for shot in gen_result.get("shots", []):
+                with st.expander(f"镜头 {shot.get('shot_index')}（{shot.get('time_range')}）"):
+                    st.markdown(f"**提示词：** {shot.get('prompt', '')}")
+                    st.markdown(f"**负向：** {shot.get('negative_prompt', '')}")
+                    st.markdown(f"**音画指令：** {shot.get('audio_instruction', '')}")
+
+            st.markdown("**模型使用提示：**")
+            for tip in gen_result.get("model_tips", []):
+                st.markdown(f"- {tip}")
+
+            md = build_prompt_export_markdown(gen_result)
+            st.download_button(
+                "下载提示词 Markdown",
+                data=md,
+                file_name=f"视频生成提示词-{gen_model}.md",
+                mime="text/markdown",
+                key="btn_download_genprompt",
+            )
+            with st.expander("预览完整提示词 Markdown"):
+                st.text(md)

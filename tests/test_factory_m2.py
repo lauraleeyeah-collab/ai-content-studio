@@ -109,6 +109,68 @@ def test_demo_video_pipeline():
     print("[3] 互动策略: 置顶评论与红线复核通过")
 
 
+def test_video_gen_prompt_structure():
+    """视频生成提示词结构校验：镜头数/必填字段/时间轴对应。"""
+    from agents.video_gen_prompt_builder import _validate
+
+    storyboard = _shots()
+    ok_result = {
+        "shots": [
+            {"shot_index": 1, "time_range": "0s-5s", "prompt": "画面1", "negative_prompt": "负向", "audio_instruction": "口播1"},
+            {"shot_index": 2, "time_range": "5s-15s", "prompt": "画面2", "negative_prompt": "负向", "audio_instruction": "口播2"},
+            {"shot_index": 3, "time_range": "15s-30s", "prompt": "画面3", "negative_prompt": "负向", "audio_instruction": "口播3"},
+        ]
+    }
+    r = _validate(ok_result, storyboard)
+    assert r["passed"] is True, str(r["issues"])
+
+    # 缺镜头 + 时间轴错位 + 缺字段
+    bad_result = {
+        "shots": [
+            {"shot_index": 1, "time_range": "0s-5s", "prompt": "", "audio_instruction": ""},
+            {"shot_index": 2, "time_range": "999s-1000s", "prompt": "画面2", "audio_instruction": "口播2"},
+        ]
+    }
+    r2 = _validate(bad_result, storyboard)
+    assert r2["passed"] is False
+    issues = " ".join(r2["issues"])
+    assert "镜头数不一致" in issues
+    assert "缺少 prompt" in issues
+    assert "时间轴不匹配" in issues
+    print("test_video_gen_prompt_structure 通过")
+
+
+def test_demo_video_gen_prompts():
+    """演示模式：分镜 → 6 模型提示词生成 + 导出 Markdown。"""
+    from utils.demo_data import DEMO_TOPIC
+    from agents.video_script_storyboarder import generate_video_script
+    from agents.video_gen_prompt_builder import (
+        build_video_gen_prompts, build_prompt_export_markdown, get_model_options,
+    )
+    from agents.search_keyword_analyzer import analyze_search_keywords
+
+    options = get_model_options()
+    assert len(options) == 6, f"应支持6个模型,实际{len(options)}"
+    assert set(options) == {"可灵 Kling", "Seedance", "万相 Wan", "混元 HunyuanVideo", "海螺 Hailuo", "Vidu"}
+
+    kws = analyze_search_keywords("AI工具/自我提升", DEMO_TOPIC["title"], DEMO_TOPIC["angle"], "人设测试")
+    script = generate_video_script("AI工具/自我提升", DEMO_TOPIC["title"], DEMO_TOPIC["angle"], "抖音", 60, kws, "人设测试")
+
+    for model in ["可灵 Kling", "Seedance", "Vidu"]:
+        result = build_video_gen_prompts(model, script["storyboard"], DEMO_TOPIC["title"], 60)
+        checks = result["checks"]["structure"]
+        assert checks["passed"] is True, f"{model}: {checks['issues']}"
+        assert len(result["shots"]) == len(script["storyboard"])
+        assert result["global_style_prompt"], f"{model} 缺全局一致性提示词"
+        assert result["model_tips"], f"{model} 缺模型提示"
+
+    md = build_prompt_export_markdown(result)
+    assert "# 视频生成提示词" in md
+    assert "全局一致性提示词" in md
+    assert "镜头 1" in md
+    print(f"[视频生成] {len(options)} 个模型可选, 可灵/Seedance/Vidu 生成与导出通过")
+
+
 if __name__ == "__main__":
     test_timeline_valid()
     test_timeline_gap()
@@ -116,4 +178,6 @@ if __name__ == "__main__":
     test_timeline_missing_field()
     test_play_checks()
     test_demo_video_pipeline()
+    test_video_gen_prompt_structure()
+    test_demo_video_gen_prompts()
     print("\nM2 视频工厂全部测试通过!")

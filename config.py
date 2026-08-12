@@ -40,6 +40,8 @@ TEMPERATURE_CONFIG = {
     "compliance_checker": 0.20,        # 合规检查需要严格稳定
     # M4 数据中心 Agent
     "attribution_analyzer": 0.30,      # 归因解读需要客观稳定
+    # M2 延伸：视频生成提示词
+    "video_gen_prompt": 0.50,          # 提示词转换需要结构化稳定
 }
 
 # ── 原有配置 ──
