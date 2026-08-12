@@ -54,7 +54,7 @@ with st.sidebar:
 st.markdown(
     '<div class="page-header">'
     "<h1>AI 超级自媒体工具</h1>"
-    "<p>一次生产，多平台适配，数据反哺 · 图文工厂 / 视频工厂 / 渠道中心 / 数据中心</p>"
+    "<p>按平台切分工作台：小红书 / 公众号 / 知乎 各自独立生产 · 一次生产，多平台适配，数据反哺</p>"
     "</div>",
     unsafe_allow_html=True,
 )
@@ -129,6 +129,27 @@ if schedules:
         )
 else:
     st.caption("暂无发布计划。在「内容日历」或「渠道中心」生成发布清单后自动加入。")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ── 平台工作台（按社交媒体切分）──
+st.subheader("平台工作台（按社交媒体切分）")
+
+platform_modules = [
+    ("pages/13_内容报告.py", "小红书工作台", "选题/标题/封面/正文/互动 + 视频分镜 + 多平台版本"),
+    ("pages/16_公众号工作台.py", "公众号工作台", "选题角度/标题/头图/深度长文/在看与留言互动"),
+    ("pages/17_知乎工作台.py", "知乎工作台", "选题角度/标题/头图/回答正文/赞同与收藏互动"),
+]
+cols = st.columns(3)
+for col, (path, title, desc) in zip(cols, platform_modules):
+    with col:
+        st.markdown(
+            f'<div class="action-card"><div class="action-icon"></div>'
+            f'<div class="action-title">{title}</div>'
+            f'<div class="action-desc">{desc}</div></div>',
+            unsafe_allow_html=True,
+        )
+        st.page_link(path, label=f"进入{title} →")
 
 st.markdown("<br>", unsafe_allow_html=True)
 

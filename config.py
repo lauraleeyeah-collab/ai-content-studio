@@ -42,6 +42,8 @@ TEMPERATURE_CONFIG = {
     "attribution_analyzer": 0.30,      # 归因解读需要客观稳定
     # M2 延伸：视频生成提示词
     "video_gen_prompt": 0.50,          # 提示词转换需要结构化稳定
+    # 平台工作台（按社交媒体切分）
+    "platform_workshop": 0.60,          # 平台生产需要兼顾规则与创意
 }
 
 # ── 原有配置 ──
