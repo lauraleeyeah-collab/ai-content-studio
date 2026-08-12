@@ -4,6 +4,8 @@
 数据回填（手动/CSV）→ 渠道对比看板 → 爆款归因 → 历史管理
 归因计算由代码确定性完成（归一化+加权），LLM 只负责解读。
 """
+import csv
+import io
 import json
 import os
 import sys
@@ -66,6 +68,40 @@ with tab1:
                 collected_at="2026-08-12",
             )
         st.success(f"已回填 {len(DEMO_METRICS)} 条示例数据。")
+
+    st.markdown("**CSV 批量导入：**")
+    st.caption("支持列名（中/英均可）：渠道/曝光/点赞/收藏/评论/分享/播放率/完播率/标题/采集日期。")
+    csv_file = st.file_uploader("上传回填 CSV", type=["csv"], key="dc_csv_upload")
+    if csv_file is not None:
+        try:
+            raw = csv_file.getvalue().decode("utf-8-sig")
+            reader = csv.DictReader(io.StringIO(raw))
+            rows = list(reader)
+            if not rows:
+                st.warning("CSV 为空。")
+            else:
+                col_map = {
+                    "渠道": "channel", "channel": "channel",
+                    "曝光": "views", "views": "views", "播放量": "views",
+                    "点赞": "likes", "likes": "likes",
+                    "收藏": "collects", "collects": "collects",
+                    "评论": "comments", "comments": "comments",
+                    "分享": "shares", "shares": "shares",
+                    "播放率": "play_rate", "play_rate": "play_rate",
+                    "完播率": "completion_rate", "completion_rate": "completion_rate",
+                    "标题": "content_title", "content_title": "content_title",
+                    "采集日期": "collected_at", "collected_at": "collected_at",
+                }
+                st.caption(f"识别到 {len(rows)} 行，列：{list(rows[0].keys())}")
+                preview = []
+                for r in rows[:5]:
+                    preview.append({c: r.get(c, "") for c in list(rows[0].keys())[:6]})
+                st.dataframe(preview, use_container_width=True)
+                if st.button("确认导入", key="btn_dc_csv_import", type="primary"):
+                    imported = db_utils.bulk_import_metrics_csv(raw)
+                    st.success(f"已批量回填 {imported} 条数据。")
+        except Exception as e:
+            st.error(f"CSV 解析失败：{e}")
 
     st.markdown("**手动录入：**")
     with st.form("metric_form"):

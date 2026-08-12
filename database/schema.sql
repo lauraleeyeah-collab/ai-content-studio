@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS content_assets (
     search_keywords TEXT,
     persona_name TEXT,
     platform_review TEXT,
+    status TEXT DEFAULT 'idea',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

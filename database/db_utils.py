@@ -31,6 +31,7 @@ def init_db():
     with get_connection() as conn:
         with open(_SCHEMA_PATH, "r", encoding="utf-8") as f:
             conn.executescript(f.read())
+    migrate_schema()
 
 
 # ══════════════════════════════════════════════
@@ -887,3 +888,127 @@ def ensure_default_persona() -> None:
         persona_description=seed_desc,
     )
     set_default_persona(pid)
+
+
+# ══════════════════════════════════════════════
+# AI 超级自媒体工具（选题库/资产池）
+# ══════════════════════════════════════════════
+
+def migrate_schema() -> None:
+    """轻量迁移：为已存在的 content_assets 表补充 status 列（幂等）。"""
+    with get_connection() as conn:
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(content_assets)").fetchall()]
+        if "status" not in cols:
+            conn.execute("ALTER TABLE content_assets ADD COLUMN status TEXT DEFAULT 'idea'")
+
+
+def save_topic_to_library(track: str, title: str, angle: str = "", content: str = "", status: str = "idea") -> int:
+    """保存选题到选题库（内容资产池），重复标题自动更新。"""
+    with get_connection() as conn:
+        row = conn.execute("SELECT id FROM content_assets WHERE title = ? AND asset_type = 'topic'", (title,)).fetchone()
+        if row:
+            conn.execute(
+                "UPDATE content_assets SET content = ?, platform_review = ?, status = ? WHERE id = ?",
+                (content, angle, status, row["id"]),
+            )
+            return row["id"]
+        cur = conn.execute(
+            "INSERT INTO content_assets (asset_type, channel, title, content, search_keywords, persona_name, platform_review, status) "
+            "VALUES ('topic', ?, ?, ?, ?, ?, ?, ?)",
+            (track, title, content, "", "", angle, status),
+        )
+        return cur.lastrowid
+
+
+def update_asset_status(asset_id: int, status: str) -> None:
+    """更新内容资产状态（idea/in_progress/done/published）。"""
+    with get_connection() as conn:
+        conn.execute("UPDATE content_assets SET status = ? WHERE id = ?", (status, asset_id))
+
+
+def get_topic_library(limit: int = 200) -> list:
+    """选题库：只取 topic 类型资产，按状态与时间排序。"""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM content_assets WHERE asset_type = 'topic' "
+            "ORDER BY CASE status WHEN 'idea' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'done' THEN 2 ELSE 3 END, id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def search_topic_library(keyword: str, limit: int = 50) -> list:
+    """按关键词搜索选题库（标题/角度/内容模糊匹配）。"""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM content_assets WHERE asset_type = 'topic' AND (title LIKE ? OR content LIKE ? OR platform_review LIKE ?) "
+            "ORDER BY id DESC LIMIT ?",
+            (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def delete_asset(asset_id: int) -> None:
+    """删除内容资产（级联清理相关改写与发布记录引用保持简单，直接删资产）。"""
+    with get_connection() as conn:
+        conn.execute("DELETE FROM content_assets WHERE id = ?", (asset_id,))
+
+
+def bulk_import_metrics_csv(raw_text: str) -> int:
+    """
+    批量导入平台回填数据（CSV 文本），支持中英文列名，返回导入条数。
+    列名映射：渠道/曝光(播放量)/点赞/收藏/评论/分享/播放率/完播率/标题/采集日期。
+    """
+    import csv
+    import io
+
+    reader = csv.DictReader(io.StringIO(raw_text))
+    rows = list(reader)
+    if not rows:
+        return 0
+
+    col_map = {
+        "渠道": "channel", "channel": "channel",
+        "曝光": "views", "views": "views", "播放量": "views",
+        "点赞": "likes", "likes": "likes",
+        "收藏": "collects", "collects": "collects",
+        "评论": "comments", "comments": "comments",
+        "分享": "shares", "shares": "shares",
+        "播放率": "play_rate", "play_rate": "play_rate",
+        "完播率": "completion_rate", "completion_rate": "completion_rate",
+        "标题": "content_title", "content_title": "content_title",
+        "采集日期": "collected_at", "collected_at": "collected_at",
+    }
+
+    def _num(r, key, default=0.0):
+        v = (r.get(key) or "").strip()
+        if not v:
+            return default
+        try:
+            return float(v)
+        except ValueError:
+            return default
+
+    imported = 0
+    with get_connection() as conn:
+        for r in rows:
+            channel = (r.get("渠道") or r.get("channel") or "未知").strip()
+            title = (r.get("标题") or r.get("content_title") or "(未命名)").strip()
+            conn.execute(
+                "INSERT INTO platform_metrics (publish_record_id, channel, content_title, views, likes, collects, comments, shares, play_rate, completion_rate, collected_at) "
+                "VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    channel,
+                    title,
+                    int(_num(r, "曝光") or _num(r, "views") or _num(r, "播放量")),
+                    int(_num(r, "点赞") or _num(r, "likes")),
+                    int(_num(r, "收藏") or _num(r, "collects")),
+                    int(_num(r, "评论") or _num(r, "comments")),
+                    int(_num(r, "分享") or _num(r, "shares")),
+                    _num(r, "播放率") or _num(r, "play_rate"),
+                    _num(r, "完播率") or _num(r, "completion_rate"),
+                    (r.get("采集日期") or r.get("collected_at") or "2026-08-12").strip(),
+                ),
+            )
+            imported += 1
+    return imported

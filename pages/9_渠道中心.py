@@ -121,6 +121,8 @@ with tab2:
             rl = rw.get("code_checks", {}).get("red_lines", {})
             with st.expander(f"{ch} 版本" + (" ✅ 红线通过" if rl.get("passed") else " ⚠️ 命中红线")):
                 st.text_area("内容（可编辑）", value=rw.get("content", ""), height=180, key=f"rw_{ch}")
+                st.markdown("**一键复制（点代码块右上角图标）：**")
+                st.code(rw.get("content", ""), language="markdown")
                 st.caption("改写理由：" + "；".join(rw.get("rewrite_reasons", [])))
                 st.caption("发布提示：" + "；".join(rw.get("publish_tips", [])))
                 if rw.get("ai_label", {}).get("required"):
