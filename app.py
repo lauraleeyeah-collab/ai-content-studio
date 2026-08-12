@@ -17,19 +17,17 @@ from database import db_utils
 from utils.ui_components import inject_custom_css, render_metric_card
 from utils.demo_data import render_demo_toggle
 
-DEFAULT_PERSONA = (
-    "人设:深圳搞钱女孩,定位是借助AI工具辅助工作效率和个人成长,内容覆盖英语学习、阅读、"
-    "职场发展、理财、搞钱副业、自律习惯六个方向,内容配比为干货80%+情绪20%。"
-    "目标人群:大学生和职场人士,核心诉求是用AI实现自我提升和收入增长。"
-)
-
 st.set_page_config(page_title="小红书内容创作工作台", layout="wide", page_icon="")
 inject_custom_css()
 
 # ── 初始化 ──
 db_utils.init_db()
+db_utils.ensure_default_persona()
 if "pipeline" not in st.session_state:
     st.session_state.pipeline = {}
+
+_default_persona = db_utils.get_default_persona()
+DEFAULT_PERSONA = _default_persona["persona_description"] if _default_persona else ""
 
 # ── 侧栏全局配置 ──
 with st.sidebar:
@@ -45,7 +43,13 @@ with st.sidebar:
         os.environ["DASHSCOPE_API_KEY"] = api_key_input
 
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
+    persona_options = [(p["name"], p["persona_description"]) for p in db_utils.get_personas()] or [("默认", DEFAULT_PERSONA)]
+    persona_name = st.selectbox("当前账号人设", [n for n, _ in persona_options], index=0, key="app_persona")
     persona_description = st.text_area("账号人设描述", value=DEFAULT_PERSONA, height=140)
+    if persona_name:
+        matched = next((d for n, d in persona_options if n == persona_name), DEFAULT_PERSONA)
+        if matched != persona_description:
+            persona_description = matched
 
 # ── 页面标题 ──
 st.markdown(

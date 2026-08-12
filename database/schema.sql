@@ -217,3 +217,32 @@ CREATE TABLE IF NOT EXISTS platform_metrics (
     collected_at TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ========== AI 超级自媒体工具（P1 多账号/内容日历） ==========
+
+-- 账号人设库：多账号档案，支持切换人设生成
+CREATE TABLE IF NOT EXISTS personas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    domain TEXT,
+    tone TEXT,
+    style_guide_ref TEXT,
+    channels TEXT,
+    persona_description TEXT,
+    is_default INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 发布计划：内容日历的数据源（计划发布时间/平台/状态）
+CREATE TABLE IF NOT EXISTS publish_schedule (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_id INTEGER,
+    channel TEXT,
+    content_title TEXT,
+    planned_date TEXT,
+    planned_time TEXT,
+    status TEXT DEFAULT 'planned',
+    persona_name TEXT,
+    notes TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);

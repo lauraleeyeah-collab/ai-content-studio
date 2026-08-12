@@ -28,6 +28,10 @@ if "channel_center" not in st.session_state:
     st.session_state.channel_center = {}
 
 cc = st.session_state.channel_center
+db_utils.ensure_default_persona()
+
+_default_persona = db_utils.get_default_persona()
+DEFAULT_PERSONA = _default_persona["persona_description"] if _default_persona else ""
 
 st.markdown(
     '<div class="page-header"><h1>渠道中心</h1>'
@@ -46,7 +50,7 @@ with st.sidebar:
     if api_key_input:
         os.environ["DASHSCOPE_API_KEY"] = api_key_input
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
-    persona_description = st.text_area("账号人设描述", value="人设:深圳搞钱女孩,职场AI提效方向", height=100)
+    persona_description = st.text_area("账号人设描述", value=DEFAULT_PERSONA, height=100)
 
 if demo_on and not cc.get("source"):
     if st.sidebar.button("一键填入示例素材", key="cc_fill_demo"):
@@ -189,8 +193,16 @@ with tab3:
                 markdown = "\n".join(lines)
                 cc["publish_list"] = markdown
 
-                # 落库发布记录
+                # 落库发布记录 + 同步加入内容日历（P1）
                 for rw in rewrites:
+                    date_part = (publish_time or "2026-08-13").split(" ")[0]
+                    time_part = (publish_time or "20:00").split(" ")[1] if " " in (publish_time or "") else "20:00"
+                    db_utils.save_schedule(
+                        asset_id=0, channel=rw.get("channel", ""),
+                        content_title=cc.get("source", {}).get("title", ""),
+                        planned_date=date_part, planned_time=time_part,
+                        persona_name=(db_utils.get_default_persona() or {}).get("name", ""),
+                    )
                     db_utils.save_publish_record(
                         asset_id=0, channel=rw.get("channel", ""),
                         final_title=cc.get("source", {}).get("title", ""),

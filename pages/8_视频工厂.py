@@ -32,6 +32,10 @@ if "video_factory" not in st.session_state:
     st.session_state.video_factory = {}
 
 db_utils.init_db()
+db_utils.ensure_default_persona()
+
+_default_persona = db_utils.get_default_persona()
+DEFAULT_PERSONA = _default_persona["persona_description"] if _default_persona else ""
 
 st.markdown(
     '<div class="page-header"><h1>视频工厂</h1>'
@@ -50,7 +54,7 @@ with st.sidebar:
     if api_key_input:
         os.environ["DASHSCOPE_API_KEY"] = api_key_input
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
-    persona_description = st.text_area("账号人设描述", value="人设:深圳搞钱女孩,职场AI提效方向", height=100)
+    persona_description = st.text_area("账号人设描述", value=DEFAULT_PERSONA, height=100)
 
 vf = st.session_state.video_factory
 
@@ -129,6 +133,8 @@ with tab2:
                     st.markdown(f"- {issue}")
             if not cta.get("present"):
                 st.warning("结尾缺少显性收藏指令（建议收藏/先收藏/收藏起来）。")
+            from agents.compliance_checker import AI_LABEL_TEMPLATES
+            st.info(f"AI 标注（发布时需附带）：{AI_LABEL_TEMPLATES.get(vf['channel'], '本视频由 AI 辅助创作')}")
 
             st.markdown(f"**标题钩子方向：** {script.get('video_title_hook', '')}")
             st.markdown(f"**结尾行动指令：** {script.get('closing_cta', '')}")

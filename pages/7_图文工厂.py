@@ -22,12 +22,6 @@ from utils.rule_checks import check_title_keywords, scan_red_lines
 from utils.ui_components import inject_custom_css
 from utils.demo_data import render_demo_toggle, DEMO_TOPIC
 
-DEFAULT_PERSONA = (
-    "人设:深圳搞钱女孩,定位是借助AI工具辅助工作效率和个人成长,内容覆盖英语学习、阅读、"
-    "职场发展、理财、搞钱副业、自律习惯六个方向,内容配比为干货80%+情绪20%。"
-    "目标人群:大学生和职场人士,核心诉求是用AI实现自我提升和收入增长。"
-)
-
 st.set_page_config(page_title="图文工厂", layout="wide")
 inject_custom_css()
 
@@ -35,6 +29,10 @@ if "factory" not in st.session_state:
     st.session_state.factory = {}
 
 db_utils.init_db()
+db_utils.ensure_default_persona()
+
+_default_persona = db_utils.get_default_persona()
+DEFAULT_PERSONA = _default_persona["persona_description"] if _default_persona else ""
 
 st.markdown(
     '<div class="page-header"><h1>图文工厂</h1>'
@@ -238,6 +236,8 @@ with tab5:
             st.text_area("正文（可编辑）", value=rewritten.get("content", ""), height=280,
                          key=f"f_copy_edit_{rewritten['channel']}")
             st.caption(f"结构：{rewritten.get('structure_note', '-')}")
+            from agents.compliance_checker import AI_LABEL_TEMPLATES
+            st.info(f"AI 标注（发布时需附带）：{AI_LABEL_TEMPLATES.get(rewritten['channel'], '本文由 AI 辅助创作')}")
             reasons = rewritten.get("rewrite_reasons") or []
             st.markdown("**改写理由：** " + "；".join(reasons))
 
