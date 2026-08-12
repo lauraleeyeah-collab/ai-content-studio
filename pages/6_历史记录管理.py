@@ -287,3 +287,49 @@ with tabs[6]:
                 if st.button("删除", key=f"del_ht_{r['id']}"):
                     db_utils.delete_hashtag_recommendation(r["id"])
                     st.rerun()
+
+
+# ══════════════════════════════════════════════
+# Tab 8: AI 超级自媒体工具新模块
+# ══════════════════════════════════════════════
+NEW_MODULE_TYPES = [
+    ("search_keywords", "搜索词记录", "get_search_keywords"),
+    ("content_assets", "内容资产", "get_content_assets"),
+    ("channel_rewrites", "渠道改写记录", "get_channel_rewrites"),
+    ("publish_records", "发布记录", "get_publish_records"),
+    ("platform_metrics", "平台回填数据", "get_platform_metrics"),
+]
+
+with st.expander("AI 超级自媒体工具新模块记录（M1-M4）", expanded=True):
+    for table, label, getter_name in NEW_MODULE_TYPES:
+        st.markdown(f"**{label}**")
+        try:
+            rows = getattr(db_utils, getter_name)(limit=100)
+        except Exception:
+            rows = []
+        if not rows:
+            st.caption(f"暂无{label}。")
+        else:
+            st.caption(f"共 {len(rows)} 条（展示字段为摘要，完整数据可在对应模块查看）")
+            preview = []
+            for r in rows:
+                item = {}
+                for key in ("id", "channel", "keyword", "asset_type", "title", "content_title",
+                            "target_channel", "final_title", "status", "created_at", "collected_at"):
+                    if key in r:
+                        val = r[key]
+                        item[key] = (str(val)[:40] + "…") if isinstance(val, str) and len(str(val)) > 40 else val
+                preview.append(item)
+            st.dataframe(preview, use_container_width=True, height=180)
+        c1, c2 = st.columns([1, 3])
+        with c1:
+            if st.button(f"清空{label}", key=f"new_clear_{table}"):
+                st.session_state[f"new_confirm_{table}"] = True
+        with c2:
+            if st.session_state.get(f"new_confirm_{table}"):
+                if st.button(f"确认清空{label}", key=f"new_clear_yes_{table}"):
+                    n = db_utils.clear_records(table)
+                    st.session_state[f"new_confirm_{table}"] = False
+                    st.success(f"已删除 {n} 条{label}。")
+                    st.rerun()
+        st.markdown("---")

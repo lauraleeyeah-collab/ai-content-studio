@@ -77,6 +77,18 @@ with col4:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
+col5, col6, col7, col8 = st.columns(4)
+with col5:
+    render_metric_card("内容资产", stats.get("content_assets_count", 0), icon="")
+with col6:
+    render_metric_card("渠道改写", stats.get("channel_rewrites_count", 0), icon="")
+with col7:
+    render_metric_card("发布记录", stats.get("publish_records_count", 0), icon="")
+with col8:
+    render_metric_card("搜索词库", stats.get("search_keywords_count", 0), icon="")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
 # ── 功能入口 ──
 st.subheader("功能模块")
 

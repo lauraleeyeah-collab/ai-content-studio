@@ -134,6 +134,11 @@ def get_dashboard_stats() -> dict:
         "topics_generated_count": 0,
         "copies_generated_count": 0,
         "trend_snapshots_count": 0,
+        # AI 超级自媒体工具新模块
+        "content_assets_count": 0,
+        "publish_records_count": 0,
+        "search_keywords_count": 0,
+        "channel_rewrites_count": 0,
     }
     with get_connection() as conn:
         try:
@@ -161,6 +166,17 @@ def get_dashboard_stats() -> dict:
             stats["trend_snapshots_count"] = row["c"] if row else 0
         except Exception:
             pass
+        for table_key, column in (
+            ("content_assets_count", "content_assets"),
+            ("publish_records_count", "publish_records"),
+            ("search_keywords_count", "search_keywords"),
+            ("channel_rewrites_count", "channel_rewrites"),
+        ):
+            try:
+                row = conn.execute(f"SELECT COUNT(*) as c FROM {column}").fetchone()
+                stats[table_key] = row["c"] if row else 0
+            except Exception:
+                pass
     return stats
 
 
@@ -485,7 +501,22 @@ _CLEARABLE_TABLES = {
     "trend_snapshots": "趋势分析",
     "title_optimizations": "标题优化",
     "hashtag_recommendations": "标签推荐",
+    # AI 超级自媒体工具新模块
+    "search_keywords": "搜索词记录",
+    "content_assets": "内容资产",
+    "channel_rewrites": "渠道改写记录",
+    "publish_records": "发布记录",
+    "platform_metrics": "平台回填数据",
 }
+
+
+def delete_record(table: str, record_id: int) -> int:
+    """按 ID 删除单条记录（表名必须命中白名单）。"""
+    if table not in _CLEARABLE_TABLES:
+        raise ValueError(f"不允许删除的表: {table}")
+    with get_connection() as conn:
+        cur = conn.execute(f"DELETE FROM {table} WHERE id = ?", (record_id,))
+        return cur.rowcount
 
 
 def clear_records(table: str) -> int:
@@ -498,3 +529,263 @@ def clear_records(table: str) -> int:
             conn.execute("DELETE FROM account_analyses")
         cur = conn.execute(f"DELETE FROM {table}")
         return cur.rowcount
+
+
+# ══════════════════════════════════════════════
+# AI 超级自媒体工具（M1 图文工厂）
+# ══════════════════════════════════════════════
+
+def save_search_keywords(track: str, keywords: list, source_topic: str, channel: str = "小红书") -> int:
+    """批量保存搜索词分析结果，返回本次插入条数。"""
+    with get_connection() as conn:
+        count = 0
+        for item in keywords or []:
+            conn.execute(
+                "INSERT INTO search_keywords (track, keyword, channel, search_intent, priority, source_topic) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    track,
+                    item.get("keyword", ""),
+                    channel,
+                    item.get("search_intent", ""),
+                    int(item.get("priority", 5)),
+                    source_topic,
+                ),
+            )
+            count += 1
+        return count
+
+
+def get_search_keywords(track: str = None, limit: int = 50) -> list:
+    """获取搜索词记录（历史管理用）。"""
+    with get_connection() as conn:
+        if track:
+            rows = conn.execute(
+                "SELECT * FROM search_keywords WHERE track = ? ORDER BY created_at DESC LIMIT ?",
+                (track, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM search_keywords ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def save_content_asset(
+    asset_type: str,
+    channel: str,
+    title: str,
+    content: str,
+    search_keywords: str = "",
+    persona_name: str = "",
+    platform_review: str = "",
+) -> int:
+    """保存内容资产（选题/图文/脚本/封面提示词统一入口）。"""
+    with get_connection() as conn:
+        cur = conn.execute(
+            "INSERT INTO content_assets (asset_type, channel, title, content, search_keywords, persona_name, platform_review) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (asset_type, channel, title, content, search_keywords, persona_name, platform_review),
+        )
+        return cur.lastrowid
+
+
+def get_content_assets(asset_type: str = None, limit: int = 50) -> list:
+    """获取内容资产列表。"""
+    with get_connection() as conn:
+        if asset_type:
+            rows = conn.execute(
+                "SELECT * FROM content_assets WHERE asset_type = ? ORDER BY created_at DESC LIMIT ?",
+                (asset_type, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM content_assets ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_assets_by_topic(topic_title: str, limit: int = 50) -> list:
+    """按选题标题模糊查找内容资产（用于历史复用与去重）。"""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM content_assets WHERE title LIKE ? ORDER BY created_at DESC LIMIT ?",
+            (f"%{topic_title}%", limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ══════════════════════════════════════════════
+# AI 超级自媒体工具（M3 渠道中心）
+# ══════════════════════════════════════════════
+
+def init_channels() -> int:
+    """初始化 6 平台规则库（已存在则跳过），返回本次插入条数。"""
+    from database.channel_rules import get_default_rules
+    inserted = 0
+    with get_connection() as conn:
+        for rule in get_default_rules():
+            exists = conn.execute("SELECT id FROM channels WHERE name = ?", (rule["name"],)).fetchone()
+            if exists:
+                continue
+            conn.execute(
+                "INSERT INTO channels (name, algorithm_weights, content_prefs, red_lines, ai_label_required, best_practices) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (rule["name"], rule["algorithm_weights"], rule["content_prefs"],
+                 rule["red_lines"], rule["ai_label_required"], rule["best_practices"]),
+            )
+            inserted += 1
+    return inserted
+
+
+def get_channels() -> list:
+    """获取全部平台规则卡。"""
+    with get_connection() as conn:
+        rows = conn.execute("SELECT * FROM channels ORDER BY id").fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_channel_rule(channel_name: str) -> dict:
+    """按平台名获取规则卡。"""
+    with get_connection() as conn:
+        row = conn.execute("SELECT * FROM channels WHERE name = ?", (channel_name,)).fetchone()
+        return dict(row) if row else None
+
+
+def update_channel_rule(channel_name: str, **fields) -> None:
+    """更新平台规则卡的可编辑字段。"""
+    allowed = {"algorithm_weights", "content_prefs", "red_lines", "ai_label_required", "best_practices"}
+    updates = {k: v for k, v in fields.items() if k in allowed}
+    if not updates:
+        return
+    sets = ", ".join(f"{k} = ?" for k in updates)
+    with get_connection() as conn:
+        conn.execute(
+            f"UPDATE channels SET {sets}, updated_at = CURRENT_TIMESTAMP WHERE name = ?",
+            (*updates.values(), channel_name),
+        )
+
+
+def save_channel_rewrite(source_asset_id, target_channel, rewritten_content,
+                         rewrite_reasons="", compliance_result="") -> int:
+    """保存多平台改写版本。"""
+    with get_connection() as conn:
+        cur = conn.execute(
+            "INSERT INTO channel_rewrites (source_asset_id, target_channel, rewritten_content, rewrite_reasons, compliance_result) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (source_asset_id, target_channel, rewritten_content, rewrite_reasons, compliance_result),
+        )
+        return cur.lastrowid
+
+
+def get_channel_rewrites(limit: int = 50) -> list:
+    """获取改写版本记录。"""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM channel_rewrites ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def save_publish_record(asset_id, channel, final_title, final_content,
+                        checklist_json="", publish_time="", status="draft") -> int:
+    """保存发布记录（发布清单落库）。"""
+    with get_connection() as conn:
+        cur = conn.execute(
+            "INSERT INTO publish_records (asset_id, channel, final_title, final_content, checklist_json, publish_time, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (asset_id, channel, final_title, final_content, checklist_json, publish_time, status),
+        )
+        return cur.lastrowid
+
+
+def get_publish_records(limit: int = 100) -> list:
+    """获取发布记录（M4 数据中心数据回填的基础）。"""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM publish_records ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def update_publish_record(record_id: int, **fields) -> None:
+    """更新发布记录状态（如：draft → published，供 M4 回填关联）。"""
+    allowed = {"status", "publish_time", "final_title", "final_content", "checklist_json"}
+    updates = {k: v for k, v in fields.items() if k in allowed}
+    if not updates:
+        return
+    sets = ", ".join(f"{k} = ?" for k in updates)
+    with get_connection() as conn:
+        conn.execute(
+            f"UPDATE publish_records SET {sets} WHERE id = ?", (*updates.values(), record_id)
+        )
+
+
+# ══════════════════════════════════════════════
+# AI 超级自媒体工具（M4 数据中心）
+# ══════════════════════════════════════════════
+
+def save_platform_metric(
+    publish_record_id, channel, content_title, views=0, likes=0, collects=0,
+    comments=0, shares=0, play_rate=0.0, completion_rate=0.0, collected_at="",
+) -> int:
+    """保存单条平台数据回填记录。"""
+    with get_connection() as conn:
+        cur = conn.execute(
+            "INSERT INTO platform_metrics (publish_record_id, channel, content_title, views, likes, collects, comments, shares, play_rate, completion_rate, collected_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (publish_record_id, channel, content_title, views, likes, collects,
+             comments, shares, play_rate, completion_rate, collected_at),
+        )
+        return cur.lastrowid
+
+
+def get_platform_metrics(channel: str = None, limit: int = 200) -> list:
+    """获取数据回填记录，支持按渠道过滤。"""
+    with get_connection() as conn:
+        if channel:
+            rows = conn.execute(
+                "SELECT * FROM platform_metrics WHERE channel = ? ORDER BY collected_at DESC, id DESC LIMIT ?",
+                (channel, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM platform_metrics ORDER BY collected_at DESC, id DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_channel_summary() -> list:
+    """
+    渠道汇总（渠道对比看板数据源）：
+    按渠道聚合 views/likes/collects/comments/shares 均值与总量，计算互动率。
+    """
+    with get_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT channel,
+                   COUNT(*) as post_count,
+                   SUM(views) as total_views,
+                   SUM(likes) as total_likes,
+                   SUM(collects) as total_collects,
+                   SUM(comments) as total_comments,
+                   SUM(shares) as total_shares,
+                   ROUND(AVG(views), 1) as avg_views,
+                   ROUND(AVG(collects), 1) as avg_collects,
+                   ROUND(AVG(play_rate), 3) as avg_play_rate,
+                   ROUND(AVG(completion_rate), 3) as avg_completion_rate
+            FROM platform_metrics
+            GROUP BY channel
+            ORDER BY total_views DESC
+            """
+        ).fetchall()
+        result = []
+        for r in rows:
+            d = dict(r)
+            total_views = d.get("total_views") or 0
+            interactions = (d.get("total_likes") or 0) + (d.get("total_collects") or 0) \
+                + (d.get("total_comments") or 0) + (d.get("total_shares") or 0)
+            d["interaction_rate"] = round(interactions / total_views, 3) if total_views else 0.0
+            d["collect_rate"] = round((d.get("total_collects") or 0) / total_views, 3) if total_views else 0.0
+            result.append(d)
+        return result

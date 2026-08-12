@@ -133,3 +133,87 @@ CREATE TABLE IF NOT EXISTS hashtag_recommendations (
     recommendations_json TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ========== AI 超级自媒体工具（M1 图文工厂） ==========
+
+-- 搜索词库：选题 → 搜索词分析 的沉淀，供标题关键词检查复用
+CREATE TABLE IF NOT EXISTS search_keywords (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    track TEXT,
+    keyword TEXT,
+    channel TEXT DEFAULT '小红书',
+    search_intent TEXT,
+    priority INTEGER DEFAULT 5,
+    source_topic TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 内容资产：选题/图文/脚本/封面提示词 的统一入口（数据反哺的基础）
+CREATE TABLE IF NOT EXISTS content_assets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_type TEXT,
+    channel TEXT,
+    title TEXT,
+    content TEXT,
+    search_keywords TEXT,
+    persona_name TEXT,
+    platform_review TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ========== AI 超级自媒体工具（M3 渠道中心） ==========
+
+-- 6 平台规则库：算法权重/内容偏好/红线/AI标注要求/最佳实践（可编辑、可迭代）
+CREATE TABLE IF NOT EXISTS channels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE,
+    algorithm_weights TEXT,
+    content_prefs TEXT,
+    red_lines TEXT,
+    ai_label_required INTEGER DEFAULT 1,
+    best_practices TEXT,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 多平台改写版本：同一素材按平台规则产出的版本 + 改写理由 + 合规结果
+CREATE TABLE IF NOT EXISTS channel_rewrites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_asset_id INTEGER,
+    target_channel TEXT,
+    rewritten_content TEXT,
+    rewrite_reasons TEXT,
+    compliance_result TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 发布记录：发布清单的落库，支持数据回填（M4 数据中心）
+CREATE TABLE IF NOT EXISTS publish_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_id INTEGER,
+    channel TEXT,
+    final_title TEXT,
+    final_content TEXT,
+    checklist_json TEXT,
+    publish_time TEXT,
+    status TEXT DEFAULT 'draft',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ========== AI 超级自媒体工具（M4 数据中心） ==========
+
+-- 平台数据回填：发布后手动/CSV 导入的各渠道表现数据
+CREATE TABLE IF NOT EXISTS platform_metrics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    publish_record_id INTEGER,
+    channel TEXT,
+    content_title TEXT,
+    views INTEGER DEFAULT 0,
+    likes INTEGER DEFAULT 0,
+    collects INTEGER DEFAULT 0,
+    comments INTEGER DEFAULT 0,
+    shares INTEGER DEFAULT 0,
+    play_rate REAL DEFAULT 0,
+    completion_rate REAL DEFAULT 0,
+    collected_at TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);

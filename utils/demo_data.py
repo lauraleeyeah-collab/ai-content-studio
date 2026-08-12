@@ -199,7 +199,7 @@ DEMO_TOPICS = [
     },
     {
         "topic_title": "记账3年我悟了：AI帮我自动分类，每月多存2000",
-        "core_angle": "把AI自动化应用到理财记账场景，契合搞钱人设闭环",
+        "core_angle": "把AI自动化应用到理财记账场景，契合搞钱人设的完整叙事",
         "borrowed_from": {"source_topic_id": "3", "structure_type": "时间线复盘型"},
         "persona_fit": "命中理财+AI工具方向，账号内容版图从'赚钱'延伸到'存钱'",
         "estimated_potential": "中",
@@ -314,7 +314,7 @@ DEMO_ACCOUNT_ANALYSIS = {
     "content_strategy": "以'AI工具+搞钱'双主线驱动，干货教程占80%、真实记录占20%，用结果反差制造点击。",
     "positioning_analysis": "定位'深圳搞钱女孩'，人设清晰且具有地域符号，与目标人群（大学生+职场人）距离近，信任感强。",
     "strengths": [
-        "内容主线聚焦，AI工具、职场、搞钱三个主题形成相互导流的闭环",
+        "内容主线聚焦，AI工具、职场、搞钱三个主题形成相互导流的内容矩阵",
         "标题公式熟练，数字对比、身份反差使用频率高且有效",
         "真实时间线复盘类内容占比合理，建立差异化信任",
     ],
@@ -366,11 +366,11 @@ DEMO_TREND_SUMMARY = {
 # ─────────────────────────────────────────────
 DEMO_TITLES = [
     {"title": "月薪8k到25k，我只做对了一件事：把AI用在工作里", "formula_type": "身份反差型+数字对比型", "rationale": "保留原爆款结构，数字反差直接命中职场人群"},
-    {"title": "别再收藏吃灰了！DeepSeek的10个隐藏用法（亲测有效）", "formula_type": "反常识型+数字清单型", "rationale": "反常识点破'收藏吃灰'心理，清单给足确定性"},
+    {"title": "AI写周报被领导点名表扬，我的3个提示词技巧（建议收藏）", "formula_type": "结果承诺型+数字清单型", "rationale": "具体结果+收藏指令，命中搜索词'AI写周报'且前20字含关键词"},
     {"title": "普通人和高薪的差距，就差这套AI工作流", "formula_type": "痛点共鸣型", "rationale": "'普通人vs高薪'制造身份代入，弱化说教感"},
     {"title": "我用AI改简历，第4天收到3个面试邀请", "formula_type": "结果承诺型", "rationale": "具体时间+具体结果，比'提升通过率'更有画面感"},
     {"title": "DeepSeek帮我做周报，领导以为我开挂了", "formula_type": "悬念型+身份反差型", "rationale": "结果悬念+领导视角反差，引发好奇"},
-    {"title": "AI副业第1周0收入，我靠什么撑到第3周接单", "formula_type": "数字时间型+真实记录型", "rationale": "真实时间线反套路，'撑到'暗示有干货"},
+    {"title": "职场AI提效必看：AI写周报的3个技巧，领导追着要模板", "formula_type": "身份标签型+数字清单型", "rationale": "'职场AI'命中赛道搜索词，前20字双关键词覆盖"},
 ]
 
 DEMO_TITLE_SCORES = [
@@ -423,9 +423,344 @@ DEMO_IMAGE_EXTRACT = [
 ]
 
 # ─────────────────────────────────────────────
+# M1 图文工厂：示例选题 / 搜索词 / 封面提示词 / 平台化正文 / 互动话术
+# ─────────────────────────────────────────────
+DEMO_TOPIC = {
+    "title": "用AI写周报被领导点名表扬，我的3个提示词技巧",
+    "angle": "真实使用记录视角：从'写周报像流水账'到'被评为重点周报'，分享3个可复用的提示词技巧",
+    "content": "很多人让AI写周报写得像流水账，核心是没给AI角色设定、素材和追问。我用了半年AI写周报，从被领导说'像流水账'到被评为'重点周报'，分享3个提示词技巧：给AI角色设定、喂结构化素材、追加追问让进度量化。数据和结论一定要自己核对。",
+}
+
+DEMO_SEARCH_KEYWORDS = [
+    {"keyword": "AI写周报", "search_intent": "找教程", "priority": 9, "is_long_tail": True},
+    {"keyword": "AI提效工具", "search_intent": "找工具清单", "priority": 8, "is_long_tail": False},
+    {"keyword": "职场AI", "search_intent": "找干货", "priority": 7, "is_long_tail": False},
+    {"keyword": "AI提示词模板", "search_intent": "找模板", "priority": 7, "is_long_tail": True},
+    {"keyword": "周报怎么写", "search_intent": "找答案", "priority": 6, "is_long_tail": True},
+    {"keyword": "办公自动化", "search_intent": "找方法", "priority": 5, "is_long_tail": False},
+    {"keyword": "打工人提效", "search_intent": "找共鸣", "priority": 4, "is_long_tail": False},
+]
+
+DEMO_COVER_PROMPT = {
+    "subject": "年轻职场女性坐在电脑前，屏幕上是AI生成周报的界面，桌上放着一杯咖啡，整体明亮通透的办公场景",
+    "style": "真实摄影感 + 轻ins风，浅色背景，人物自然不做作",
+    "composition": "人物居中偏右，左侧留出1/3空间给文字位，画面下方留白",
+    "text_slot": "主标题：AI写周报\\n副标题：3个提示词技巧",
+    "color_scheme": "主色浅米白，对比色深蓝，文字用高对比深色大字",
+    "negative_hint": ["避免花哨滤镜", "避免遮挡人物面部", "避免画面过暗"],
+}
+
+DEMO_PLATFORM_COPY = {
+    "content": "如果你还在为每周写周报发愁，这篇直接收藏。我用AI写周报已经半年，从被领导说'像流水账'到被评为'重点周报'，核心就3个提示词技巧。\n\n第一，给AI角色设定。不要直接说'帮我写周报'，先告诉它'你是一个项目经理，要突出本周进度和风险'，输出立刻有重点。\n\n第二，喂结构化素材。把本周做的5件事按'完成/进行中/风险'分类贴进去，AI输出的周报自带逻辑，不用你二次整理。\n\n第三，追加追问。第一次输出后，加一句'把进度量化成百分比，风险给应对方案'，周报的专业度直接拉满。\n\n最后提醒一句：AI写周报是提效不是代劳，数据和结论一定要自己核对。建议收藏，下周写周报前直接翻出来用。",
+    "structure_note": "清单体：开头给价值承诺 + 3步实操 + 结尾提醒，符合小红书收藏导向",
+    "rewrite_reasons": [
+        "开头改成直接给'收藏理由'，符合小红书搜索与收藏权重",
+        "正文拆成3个短段，每段一个要点，降低阅读门槛",
+        "结尾加了显性「建议收藏」指令，提升收藏率",
+    ],
+}
+DEMO_INTERACTION_COPY = {
+    "collect_reasons": [
+        "建议收藏，下周写周报前直接翻出这篇照着做",
+        "3个提示词模板可以直接复制改自己场景用",
+    ],
+    "comment_guides": [
+        "你写周报最头疼的是哪一步？评论区报个数字：1素材整理 2措辞表达 3领导看不懂",
+        "有没有用过AI写周报翻车的？分享下你的坑，我帮你改提示词",
+    ],
+    "cta_suggestions": [
+        "建议收藏，下次需要时直接翻出来用",
+        "转发给同样被周报折磨的同事",
+    ],
+    "strategy_note": "收藏理由显性+评论区二选一提问，双管齐下提升收藏率与评论率",
+}
+
+# ─────────────────────────────────────────────
+# M2 视频工厂：分镜脚本 / 播放优化 / 互动策略
+# ─────────────────────────────────────────────
+DEMO_VIDEO_STORYBOARD = {
+ "video_title_hook": "用AI写周报被领导点名表扬，这条视频拆解3个提示词技巧",
+ "duration_seconds": 60,
+ "storyboard": [
+  {
+   "time_start": 0,
+   "time_end": 5,
+   "scene": "钩子",
+   "visual": "人物近景直面镜头",
+   "voiceover": "（钩子段口播）被领导点名表扬的周报，我只改了3个地方，这条视频建议收藏。",
+   "subtitle": "（钩子段字幕）周报被领导点名表扬",
+   "transition": "硬切"
+  },
+  {
+   "time_start": 5,
+   "time_end": 15,
+   "scene": "痛点",
+   "visual": "场景：痛点，人物中景，屏幕演示AI周报界面",
+   "voiceover": "（痛点段口播）很多人写周报像流水账，领导根本不看，问题出在没给AI设定角色。",
+   "subtitle": "（痛点段字幕）写周报像流水账？",
+   "transition": "硬切"
+  },
+  {
+   "time_start": 15,
+   "time_end": 30,
+   "scene": "方法一",
+   "visual": "场景：方法一，人物中景，屏幕演示AI周报界面",
+   "voiceover": "（方法一段口播）第一，给AI角色设定，让它当项目经理，输出立刻有重点。",
+   "subtitle": "（方法一段字幕）第1招：给AI角色设定",
+   "transition": "硬切"
+  },
+  {
+   "time_start": 30,
+   "time_end": 45,
+   "scene": "方法二",
+   "visual": "场景：方法二，人物中景，屏幕演示AI周报界面",
+   "voiceover": "（方法二段口播）第二，喂结构化素材，按完成/进行中/风险分类。",
+   "subtitle": "（方法二段字幕）第2招：喂结构化素材",
+   "transition": "硬切"
+  },
+  {
+   "time_start": 45,
+   "time_end": 55,
+   "scene": "避坑",
+   "visual": "场景：避坑，人物中景，屏幕演示AI周报界面",
+   "voiceover": "（避坑段口播）第三，追加追问让进度量化，但数据和结论一定要自己核对。",
+   "subtitle": "（避坑段字幕）第3招：追加追问+自己核对",
+   "transition": "硬切"
+  },
+  {
+   "time_start": 55,
+   "time_end": 60,
+   "scene": "结尾",
+   "visual": "人物近景直面镜头",
+   "voiceover": "（结尾段口播）建议收藏，下次写周报直接翻出来用。",
+   "subtitle": "（结尾段字幕）建议收藏",
+   "transition": "叠化"
+  }
+ ],
+ "closing_cta": "建议收藏，下次写周报直接翻出来用。"
+}
+
+DEMO_VIDEO_PLAY = {
+ "five_sec_hook": "被领导点名表扬的周报，我只改了3个地方。",
+ "hook_assessment": "现有开头已给出结果承诺，可再增加具体数字增强可信度。",
+ "collect_cta": "建议收藏，下次写周报前直接翻出这条视频照着做。",
+ "completion_tips": [
+  "方法段落各控制在12秒内，避免拖沓",
+  "结尾前3秒给'建议收藏'动作，别等口播结束"
+ ],
+ "subtitle_tips": [
+  "字幕字号加大，适配地铁通勤静音观看",
+  "关键数字（3个技巧）用大字高亮"
+ ],
+ "risks": [
+  "避免出现'绝对有效'等极限词",
+  "AI生成画面需标注AI创作，符合平台强制标注要求"
+ ]
+}
+
+DEMO_VIDEO_INTERACTION = {
+ "comment_pin": "这条视频建议收藏，3个提示词技巧可以直接复制改自己场景用。你写周报最头疼哪一步？评论区报个数字。",
+ "engagement_questions": [
+  "你写周报最头疼的是哪一步？1素材整理 2措辞表达 3领导看不懂",
+  "有没有用AI写周报翻车过？分享下你的坑，我帮你改提示词"
+ ],
+ "share_reasons": [
+  "转发给同样被周报折磨的同事",
+  "分享到工作群，下周写周报前一起用"
+ ],
+ "reply_strategy": "发布后前30分钟回复所有评论，置顶评论引导收藏。",
+ "risk_notes": [
+  "不承诺'绝对有效'，用'我亲测'表述",
+  "AI生成画面需标注"
+ ]
+}
+
+# ─────────────────────────────────────────────
+# M3 渠道中心：渠道改写（按平台版本）/ 合规检查
+# ─────────────────────────────────────────────
+DEMO_CHANNEL_REWRITES = {'公众号': {'ai_label': {'required': True, 'template': '本文由 AI 辅助创作'},
+         'channel': '公众号',
+         'code_checks': {'has_collect_cta': False,
+                         'red_lines': {'hits': [], 'passed': True, 'suggestion': ''}},
+         'content': '被领导点名表扬的周报，我只改了3个提示词技巧。\n'
+                    '\n'
+                    '## 为什么你的周报像流水账\n'
+                    "很多人让AI写周报，第一步就错了：直接说'帮我写周报'，AI只能给你模板腔。\n"
+                    '\n'
+                    '## 第1招：给AI角色设定\n'
+                    "告诉它'你是一个项目经理，要突出本周进度和风险'……\n"
+                    '\n'
+                    '## 第2招：喂结构化素材\n'
+                    '按完成/进行中/风险分类……\n'
+                    '\n'
+                    '## 第3招：追加追问\n'
+                    "'进度量化成百分比，风险给应对方案'……\n"
+                    '\n'
+                    '## 写在最后\n'
+                    'AI写周报是提效不是代劳，数据和结论一定要自己核对。你写周报最头疼哪一步？评论区聊聊。',
+         'publish_tips': ['标题前20字放关键词', '声明AI辅助创作'],
+         'rewrite_reasons': ['开头3秒钩子+分段小标题，符合公众号完读率权重', '信息密度高、节奏快，适配64个流量点位', '结尾互动问题引导评论']},
+ '小红书': {'ai_label': {'required': True, 'template': '本文由 AI 辅助创作'},
+         'channel': '小红书',
+         'code_checks': {'has_collect_cta': True,
+                         'red_lines': {'hits': [], 'passed': True, 'suggestion': ''}},
+         'content': '被领导点名表扬的周报，我只改了3个提示词技巧，这篇建议收藏。\n'
+                    '\n'
+                    "第一，给AI角色设定。告诉它'你是一个项目经理，要突出进度和风险'，输出立刻有重点。\n"
+                    '\n'
+                    '第二，喂结构化素材。按完成/进行中/风险分类贴进去，周报自带逻辑。\n'
+                    '\n'
+                    "第三，追加追问。加一句'进度量化成百分比，风险给应对方案'。\n"
+                    '\n'
+                    '最后提醒：AI写周报是提效不是代劳，数据和结论自己核对。建议收藏，下周直接翻出来用。',
+         'publish_tips': ["标题前20字放'AI写周报'关键词", '发布时勾选AI创作标注'],
+         'rewrite_reasons': ['开头直接给结果承诺+收藏指令，符合小红书CES收藏高权重',
+                             '清单体三步骤结构，降低阅读门槛，利好停留时长',
+                             '结尾显性收藏指令，提升收藏率']},
+ '抖音': {'ai_label': {'required': True, 'template': '本视频含 AI 辅助创作内容'},
+        'channel': '抖音',
+        'code_checks': {'has_collect_cta': True,
+                        'red_lines': {'hits': [], 'passed': True, 'suggestion': ''}},
+        'content': '被领导点名表扬的周报，我只改了3个地方。\n'
+                   '\n'
+                   '第一，给AI角色设定，让它当项目经理。\n'
+                   '第二，喂结构化素材，按完成/进行中/风险分类。\n'
+                   '第三，追加追问，让进度量化成百分比。\n'
+                   '\n'
+                   '数据和结论一定要自己核对。建议收藏，下次写周报直接翻出来用。',
+        'publish_tips': ['发布时勾选AI创作标注', '评论区置顶引导收藏'],
+        'rewrite_reasons': ['口播短文案，3秒钩子开头，符合抖音5秒完播权重', "显性'建议收藏'指令，符合收藏率第一权重", '删掉长段解释，适配快节奏']},
+ '知乎': {'ai_label': {'required': True, 'template': '本文由 AI 辅助创作'},
+        'channel': '知乎',
+        'code_checks': {'has_collect_cta': False,
+                        'red_lines': {'hits': [], 'passed': True, 'suggestion': ''}},
+        'content': '结论先行：用AI写周报被领导认可，核心不是工具，是提示词方法。\n'
+                   '\n'
+                   "我用了半年AI写周报，从'像流水账'到'重点周报'，方法就3条：\n"
+                   '\n'
+                   '1. 给AI角色设定（项目经理视角）\n'
+                   '2. 喂结构化素材（完成/进行中/风险）\n'
+                   '3. 追加追问（进度量化+风险应对）\n'
+                   '\n'
+                   '注意事项：AI输出的是草稿，数据与结论必须人工核对，这是提效工具不是代劳工具。\n'
+                   '\n'
+                   "延伸阅读：想系统提升职场表达，可以先从'结构化汇报'入手。",
+        'publish_tips': ['发布时声明AI辅助创作', '补充具体案例数据增强可信度'],
+        'rewrite_reasons': ['结论先行，第一段直接给答案，符合知乎专业内容偏好', '分点论证+注意事项，建立专业人设', '结尾给延伸建议，引导深度互动']},
+ '视频号': {'ai_label': {'required': True, 'template': '本文由 AI 辅助创作'},
+         'channel': '视频号',
+         'code_checks': {'has_collect_cta': True,
+                         'red_lines': {'hits': [], 'passed': True, 'suggestion': ''}},
+         'content': '你写周报是不是也像流水账？\n'
+                    '\n'
+                    "我用了半年AI写周报，从被领导说'像流水账'到被评为'重点周报'，就3个改变。\n"
+                    '\n'
+                    '给AI角色设定、喂结构化素材、追加追问让进度量化。\n'
+                    '\n'
+                    '你写周报最头疼哪一步？评论区报个数字，我帮你改提示词。\n'
+                    '\n'
+                    '建议收藏，下次写周报直接翻出来用。',
+         'publish_tips': ['发布后前30分钟回复所有评论', '配合私域群发分享'],
+         'rewrite_reasons': ['评论引导问题设计，符合视频号社交推荐靠评论数', '真实人设叙事（我用了半年），贴近私域承接调性', '结尾引导收藏+评论双行动']},
+ '问一问': {'ai_label': {'required': True, 'template': '本文由 AI 辅助创作'},
+         'channel': '问一问',
+         'code_checks': {'has_collect_cta': True,
+                         'red_lines': {'hits': [], 'passed': True, 'suggestion': ''}},
+         'content': '用AI写周报，3个提示词技巧（亲测有效）：\n'
+                    '\n'
+                    "1. 给AI角色设定：告诉它'你是项目经理，突出进度和风险'。\n"
+                    '2. 喂结构化素材：按完成/进行中/风险分类。\n'
+                    "3. 追加追问：'进度量化成百分比，风险给应对方案'。\n"
+                    '\n'
+                    '【图】建议配一张周报前后对比截图。\n'
+                    '\n'
+                    '提醒：数据和结论要自己核对，AI是提效不是代劳。建议收藏。',
+         'publish_tips': ['配图用周报前后对比截图', '回答保持简洁，别展开长文'],
+         'rewrite_reasons': ['开头直接给答案，符合问一问高信息密度偏好', '配图位标注，图片好看是奖励项', '可直接收藏的实用结构']}}
+
+DEMO_COMPLIANCE = {'ai_label_suggestion': 'AI 生成内容，建议声明「本文由 AI 辅助创作」。',
+ 'llm_findings': [],
+ 'overall_verdict': 'pass',
+ 'summary': '未发现高合规风险，AI 标注建议已给出。'}
+
+
+# ─────────────────────────────────────────────
 # 系统Prompt关键词 → 示例数据 路由
 # 用 SYSTEM_PROMPT 里的稳定身份词做匹配，避免误命中
 # ─────────────────────────────────────────────
+
+def _channel_rewrite_demo(system_prompt: str, user_prompt: str) -> str:
+    """M3 渠道改写演示：从 user_prompt 提取目标平台，返回该平台版本。"""
+    import re
+    m = re.search(r"目标平台：([^\s\n]+)", user_prompt)
+    channel = m.group(1) if m else "小红书"
+    data = DEMO_CHANNEL_REWRITES.get(channel)
+    if data is None:
+        data = dict(DEMO_CHANNEL_REWRITES["小红书"])
+        data["channel"] = channel
+    return json.dumps(data, ensure_ascii=False)
+
+
+# ─────────────────────────────────────────────
+# M4 数据中心：渠道指标 / 爆款归因解读
+# ─────────────────────────────────────────────
+DEMO_METRICS = [{'channel': '小红书',
+  'collects': 980,
+  'comments': 210,
+  'completion_rate': 0.0,
+  'content_title': '用AI写周报被领导点名表扬',
+  'likes': 620,
+  'play_rate': 0.0,
+  'shares': 160,
+  'views': 8500},
+ {'channel': '抖音',
+  'collects': 2600,
+  'comments': 340,
+  'completion_rate': 0.31,
+  'content_title': '用AI写周报被领导点名表扬',
+  'likes': 1500,
+  'play_rate': 0.42,
+  'shares': 90,
+  'views': 32000},
+ {'channel': '视频号',
+  'collects': 220,
+  'comments': 150,
+  'completion_rate': 0.28,
+  'content_title': '用AI写周报被领导点名表扬',
+  'likes': 380,
+  'play_rate': 0.35,
+  'shares': 110,
+  'views': 6800},
+ {'channel': '公众号',
+  'collects': 60,
+  'comments': 12,
+  'completion_rate': 0.0,
+  'content_title': '用AI写周报被领导点名表扬',
+  'likes': 85,
+  'play_rate': 0.0,
+  'shares': 8,
+  'views': 2100},
+ {'channel': '问一问',
+  'collects': 290,
+  'comments': 45,
+  'completion_rate': 0.0,
+  'content_title': '用AI写周报被领导点名表扬',
+  'likes': 140,
+  'play_rate': 0.0,
+  'shares': 60,
+  'views': 3600}]
+
+DEMO_ATTRIBUTION = {'channel_gap': '小红书收藏率高但曝光低于抖音，说明搜索词覆盖到位但缺爆款标题承接；公众号表现弱，长文改写得不够深。',
+ 'confidence': 'medium',
+ 'recommendations': ['下一轮视频脚本中段每10秒一个信息点，压缩方法段时长',
+                     "小红书标题前20字替换为更高频搜索词（如'AI提效'）",
+                     '公众号版本补充真实案例数据，提升完读率',
+                     '问一问版本增加配图位，图片好看是红利奖励项'],
+ 'summary': '抖音收藏率高验证了显性收藏指令策略，下一步优化完播率与小红书搜索词。',
+ 'top_channel': '抖音（总曝光 3.2 万，收藏率最高），原因是收藏指令显性 + 3秒钩子开头，符合抖音收藏率第一权重。',
+ 'weak_dimension': '完播率（31%，低于均值），前5秒钩子强度足够但中段节奏偏慢，信息点密度不够。'}
+
+
 _ROUTES = [
     ("数据整理专员", DEMO_STRUCTURED),          # Agent0 采集结构化
     ("资深运营专家", DEMO_FILTERED),            # Agent1 热点筛选
@@ -439,6 +774,16 @@ _ROUTES = [
     ("标题评审专家", DEMO_TITLE_SCORES),        # 标题评分
     ("流量分发策略专家", DEMO_HASHTAGS),        # 标签推荐
     ("内容识别专家", DEMO_IMAGE_EXTRACT),       # 截图内容提取
+    ("搜索引擎优化", DEMO_SEARCH_KEYWORDS),     # M1 搜索词分析
+    ("内容封面设计师", DEMO_COVER_PROMPT),      # M1 封面提示词
+    ("自媒体内容专家", DEMO_PLATFORM_COPY),     # M1 平台化正文改写
+    ("短视频导演", DEMO_VIDEO_STORYBOARD),      # M2 分镜脚本
+    ("播放优化", DEMO_VIDEO_PLAY),              # M2 播放优化
+    ("视频互动运营", DEMO_VIDEO_INTERACTION),   # M2 视频互动策略（需在"互动运营专家"之前，避免子串误匹配）
+    ("互动运营专家", DEMO_INTERACTION_COPY),    # M1 互动话术
+    ("内容合规审核", DEMO_COMPLIANCE),          # M3 合规检查
+    ("跨平台自媒体", _channel_rewrite_demo),    # M3 渠道改写（按目标平台返回不同版本）
+    ("数据驱动内容策略", DEMO_ATTRIBUTION),     # M4 爆款归因解读
 ]
 
 
@@ -453,6 +798,8 @@ def is_demo_mode() -> bool:
         return False
 
 
+
+
 def get_demo_response(system_prompt: str, user_prompt: str) -> str:
     """
     根据 system_prompt 匹配内置示例数据，返回字符串。
@@ -461,6 +808,8 @@ def get_demo_response(system_prompt: str, user_prompt: str) -> str:
     """
     for keyword, payload in _ROUTES:
         if keyword in system_prompt:
+            if callable(payload):
+                return payload(system_prompt, user_prompt)
             if isinstance(payload, str):
                 return payload
             return json.dumps(payload, ensure_ascii=False)

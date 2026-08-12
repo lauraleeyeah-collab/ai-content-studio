@@ -26,6 +26,20 @@ TEMPERATURE_CONFIG = {
     "title_scorer": 0.25,
     "hashtag_recommender": 0.40,
     "image_extractor": 0,     # 图片提取需要稳定性
+    # M1 图文工厂 Agent
+    "search_keyword_analyzer": 0.25,   # 搜索词拆解需要稳定准确
+    "cover_prompt_generator": 0.70,    # 封面提示词需要创意
+    "platform_copywriter": 0.60,       # 平台改写需要兼顾规则与自然
+    "interaction_copywriter": 0.70,    # 互动话术需要创意
+    # M2 视频工厂 Agent
+    "video_storyboarder": 0.60,        # 分镜脚本需要结构化稳定
+    "video_play_optimizer": 0.30,      # 播放优化需要诊断准确
+    "video_interaction": 0.70,         # 互动策略需要创意
+    # M3 渠道中心 Agent
+    "channel_rewriter": 0.60,          # 渠道改写需要兼顾规则与自然
+    "compliance_checker": 0.20,        # 合规检查需要严格稳定
+    # M4 数据中心 Agent
+    "attribution_analyzer": 0.30,      # 归因解读需要客观稳定
 }
 
 # ── 原有配置 ──
