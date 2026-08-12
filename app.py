@@ -1,10 +1,8 @@
 """
-小红书内容创作工作台 — Dashboard 着陆页
+AI 超级自媒体工具 — 工作台首页
 
-多功能工具的主入口,提供:
-- 快速统计概览
-- 功能模块入口导航
-- 最近活动记录
+主入口：全渠道概览 + 快速统计 + 功能模块导航 + 最近活动。
+覆盖：图文工厂 / 视频工厂 / 渠道中心 / 数据中心 / 账号中心 / 内容日历 / 内容报告。
 """
 import os
 import sys
@@ -17,11 +15,12 @@ from database import db_utils
 from utils.ui_components import inject_custom_css, render_metric_card
 from utils.demo_data import render_demo_toggle
 
-st.set_page_config(page_title="小红书内容创作工作台", layout="wide", page_icon="")
+st.set_page_config(page_title="AI 超级自媒体工具", layout="wide", page_icon="")
 inject_custom_css()
 
 # ── 初始化 ──
 db_utils.init_db()
+db_utils.init_channels()
 db_utils.ensure_default_persona()
 if "pipeline" not in st.session_state:
     st.session_state.pipeline = {}
@@ -54,9 +53,9 @@ with st.sidebar:
 # ── 页面标题 ──
 st.markdown(
     '<div class="page-header">'
-    '<h1>小红书内容创作工作台</h1>'
-    '<p>AI 驱动的内容分析、竞品研究与爆款创作全流程工具</p>'
-    '</div>',
+    "<h1>AI 超级自媒体工具</h1>"
+    "<p>一次生产，多平台适配，数据反哺 · 图文工厂 / 视频工厂 / 渠道中心 / 数据中心</p>"
+    "</div>",
     unsafe_allow_html=True,
 )
 
@@ -71,100 +70,114 @@ stats = db_utils.get_dashboard_stats()
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    render_metric_card("笔记分析", stats.get("note_analyses_count", 0), icon="")
+    render_metric_card("内容资产", stats.get("content_assets_count", 0), icon="")
 with col2:
-    render_metric_card("竞品账号", stats.get("competitor_accounts_count", 0), icon="")
+    render_metric_card("渠道改写", stats.get("channel_rewrites_count", 0), icon="")
 with col3:
-    render_metric_card("生成选题", stats.get("topics_generated_count", 0), icon="")
+    render_metric_card("发布记录", stats.get("publish_records_count", 0), icon="")
 with col4:
-    render_metric_card("生成文案", stats.get("copies_generated_count", 0), icon="")
+    render_metric_card("搜索词库", stats.get("search_keywords_count", 0), icon="")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 col5, col6, col7, col8 = st.columns(4)
 with col5:
-    render_metric_card("内容资产", stats.get("content_assets_count", 0), icon="")
+    render_metric_card("笔记分析", stats.get("note_analyses_count", 0), icon="")
 with col6:
-    render_metric_card("渠道改写", stats.get("channel_rewrites_count", 0), icon="")
+    render_metric_card("竞品账号", stats.get("competitor_accounts_count", 0), icon="")
 with col7:
-    render_metric_card("发布记录", stats.get("publish_records_count", 0), icon="")
+    render_metric_card("生成选题", stats.get("topics_generated_count", 0), icon="")
 with col8:
-    render_metric_card("搜索词库", stats.get("search_keywords_count", 0), icon="")
+    render_metric_card("生成文案", stats.get("copies_generated_count", 0), icon="")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ── 全渠道概览 ──
+st.subheader("全渠道概览")
+summary = db_utils.get_channel_summary()
+channels = db_utils.get_channels()
+if summary:
+    by_name = {s["channel"]: s for s in summary}
+    cols = st.columns(len(channels))
+    for col, ch in zip(cols, channels):
+        s = by_name.get(ch["name"])
+        with col:
+            if s:
+                st.metric(
+                    ch["name"],
+                    f"{s['total_views']:,}" if s["total_views"] else "0",
+                    f"收藏率 {s['collect_rate']:.1%}",
+                )
+                st.caption(f"发布 {s['post_count']} 条 ｜ 互动率 {s['interaction_rate']:.1%}")
+            else:
+                st.metric(ch["name"], "0", "暂无数据")
+                st.caption("去数据中心回填数据")
+else:
+    st.info("暂无渠道数据。在「数据中心」回填发布数据后，这里会显示 6 个平台的曝光与收藏率概览。")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ── 发布计划 ──
+st.subheader("最近发布计划")
+schedules = db_utils.get_schedules(limit=5)
+if schedules:
+    for s in schedules:
+        icon = {"planned": "⏳", "published": "✅", "skipped": "➖"}.get(s.get("status"), "⏳")
+        st.text(
+            f"{icon} {s.get('planned_date')} {s.get('planned_time')} ｜ {s.get('channel')} ｜ "
+            f"{s.get('content_title') or '(无标题)'}"
+        )
+else:
+    st.caption("暂无发布计划。在「内容日历」或「渠道中心」生成发布清单后自动加入。")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ── 功能入口 ──
-st.subheader("功能模块")
+st.subheader("核心生产模块")
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown(
-        '<div class="action-card">'
-        '<div class="action-icon"></div>'
-        '<div class="action-title">热点选题流水线</div>'
-        '<div class="action-desc">5步AI流水线:采集 → 筛选 → 拆解 → 选题 → 文案,全流程可视化</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/1_热点选题流水线.py", label="进入热点选题流水线 →")
-
-    st.markdown(
-        '<div class="action-card">'
-        '<div class="action-icon"></div>'
-        '<div class="action-title">竞品账号分析</div>'
-        '<div class="action-desc">深度分析竞品内容策略、发布规律、互动数据,提炼可借鉴套路</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/3_竞品账号分析.py", label="进入竞品账号分析 →")
-
-with col2:
-    st.markdown(
-        '<div class="action-card">'
-        '<div class="action-icon"></div>'
-        '<div class="action-title">笔记爆款分析</div>'
-        '<div class="action-desc">7维度评分诊断单篇笔记爆款潜力,雷达图可视化,精准定位改进方向</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/2_笔记爆款分析.py", label="进入笔记爆款分析 →")
-
-    st.markdown(
-        '<div class="action-card">'
-        '<div class="action-icon"></div>'
-        '<div class="action-title">热门内容趋势</div>'
-        '<div class="action-desc">品类级趋势分析,标签共现图谱,发现内容空白与爆款规律</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/4_热门内容趋势.py", label="进入热门内容趋势 →")
+core_modules = [
+    ("pages/7_图文工厂.py", "图文工厂", "选题 → 搜索词 → 标题 → 封面 → 正文 → 互动话术"),
+    ("pages/8_视频工厂.py", "视频工厂", "秒级分镜 → 播放优化 → 视频生成提示词导出"),
+    ("pages/9_渠道中心.py", "渠道中心", "6 平台规则库 → 一键改写 → 合规检查 → 发布清单"),
+    ("pages/10_数据中心.py", "数据中心", "数据回填 → 渠道对比 → 爆款归因 → 历史管理"),
+    ("pages/13_内容报告.py", "内容报告", "一键生成完整生产报告，可直接用于作品集"),
+]
+cols = st.columns(5)
+for col, (path, title, desc) in zip(cols, core_modules):
+    with col:
+        st.markdown(
+            f'<div class="action-card"><div class="action-icon"></div>'
+            f'<div class="action-title">{title}</div>'
+            f'<div class="action-desc">{desc}</div></div>',
+            unsafe_allow_html=True,
+        )
+        st.page_link(path, label=f"进入{title} →")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown(
-        '<div class="action-card">'
-        '<div class="action-icon"></div>'
-        '<div class="action-title">内容创作辅助</div>'
-        '<div class="action-desc">标题优化、A/B测试、标签推荐、文案诊断,全方位提升内容质量</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/5_内容创作辅助.py", label="进入内容创作辅助 →")
+# ── 运营与辅助模块 ──
+st.subheader("运营与辅助模块")
 
-with col2:
-    st.markdown(
-        '<div class="action-card">'
-        '<div class="action-icon"></div>'
-        '<div class="action-title">历史记录管理</div>'
-        '<div class="action-desc">查看、复用或删除全部历史数据，让每次分析沉淀为账号运营资产</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/6_历史记录管理.py", label="进入历史记录管理 →")
-
+aux_modules = [
+    ("pages/1_热点选题流水线.py", "热点选题流水线", "5步AI流水线：采集→筛选→拆解→选题→文案"),
+    ("pages/2_笔记爆款分析.py", "笔记爆款分析", "7维度评分诊断，雷达图可视化"),
+    ("pages/3_竞品账号分析.py", "竞品账号分析", "竞品策略/发布规律/互动数据深挖"),
+    ("pages/4_热门内容趋势.py", "热门内容趋势", "标签共现图谱 + 内容空白发现"),
+    ("pages/5_内容创作辅助.py", "内容创作辅助", "标题优化 / A/B测试 / 标签推荐"),
+    ("pages/11_账号中心.py", "账号中心", "多账号人设库，切换默认账号"),
+    ("pages/12_内容日历.py", "内容日历", "发布计划周视图 + 平台分布"),
+    ("pages/6_历史记录管理.py", "历史记录管理", "全部历史数据的查看/复用/删除"),
+]
+cols = st.columns(4)
+for idx, (path, title, desc) in enumerate(aux_modules):
+    with cols[idx % 4]:
+        st.markdown(
+            f'<div class="action-card"><div class="action-icon"></div>'
+            f'<div class="action-title">{title}</div>'
+            f'<div class="action-desc">{desc}</div></div>',
+            unsafe_allow_html=True,
+        )
+        st.page_link(path, label=f"进入{title} →")
 
 # ── 最近活动 ──
 st.markdown("<br>", unsafe_allow_html=True)
