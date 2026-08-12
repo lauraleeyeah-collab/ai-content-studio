@@ -1,0 +1,5 @@
+streamlit>=1.32
+openai>=1.20
+plotly>=5.18
+streamlit-paste-button>=0.1.2
+pillow>=10.0
