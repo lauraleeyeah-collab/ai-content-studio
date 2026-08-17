@@ -7,7 +7,6 @@
 import time
 
 from agents.content_report_builder import build_content_report, DEFAULT_CHANNELS
-from database import db_utils
 
 
 def batch_produce(

@@ -4,10 +4,7 @@
 """
 
 import base64
-import io
 import streamlit as st
-import streamlit.components.v1 as components
-import json
 
 
 def render_image_paste_input(label, key, height=150):

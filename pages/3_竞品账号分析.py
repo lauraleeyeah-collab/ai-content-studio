@@ -13,7 +13,6 @@ import sys
 
 import streamlit as st
 import plotly.graph_objects as go
-import plotly.express as px
 
 # 确保项目根目录在 path 中
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))

@@ -4,7 +4,6 @@
 模型负责推荐标签和策略说明，代码负责校验标签分布合理性（大词/中词/小词比例）
 并按相关性排序，确保推荐结果的可操作性。
 """
-import json
 
 from prompts import hashtag_prompt
 from utils.llm_client import call_llm_json

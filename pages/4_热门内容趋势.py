@@ -19,7 +19,7 @@ except ImportError:
 from agents.trend_summarizer import summarize_trends
 from agents.trend_collector import collect_trends
 from database import db_utils
-from utils.ui_components import inject_custom_css, render_trend_card, render_metric_card
+from utils.ui_components import inject_custom_css, render_trend_card
 from utils.demo_data import render_demo_toggle
 
 st.set_page_config(page_title="热门内容趋势", layout="wide")

@@ -5,7 +5,6 @@
 评分阶段使用低temperature保证评分一致性。
 总分由代码计算（5维度均值 * 2 → 百分制），排名和判定也由代码确定性完成。
 """
-import json
 
 from prompts import title_optimizer_prompt
 from utils.llm_client import call_llm_json

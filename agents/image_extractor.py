@@ -3,7 +3,6 @@ Agent: 图片/链接内容提取器
 使用视觉模型从小红书截图中自动识别笔记内容和互动数据。
 """
 import base64
-import json
 
 from config import TEMPERATURE_CONFIG
 from prompts import image_extraction_prompt

@@ -5,9 +5,12 @@ AI 超级自媒体工具 — 工作台首页
 覆盖：图文工厂 / 视频工厂 / 渠道中心 / 数据中心 / 账号中心 / 内容日历 / 内容报告。
 """
 import os
+import logging
 import sys
 
 import streamlit as st
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -78,7 +81,7 @@ with col3:
 with col4:
     render_metric_card("搜索词库", stats.get("search_keywords_count", 0), icon="")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 col5, col6, col7, col8 = st.columns(4)
 with col5:
@@ -90,7 +93,7 @@ with col7:
 with col8:
     render_metric_card("生成文案", stats.get("copies_generated_count", 0), icon="")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 # ── 全渠道概览 ──
 st.subheader("全渠道概览")
@@ -115,7 +118,7 @@ if summary:
 else:
     st.info("暂无渠道数据。在「数据中心」回填发布数据后，这里会显示 6 个平台的曝光与收藏率概览。")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 # ── 发布计划 ──
 st.subheader("最近发布计划")
@@ -130,7 +133,7 @@ if schedules:
 else:
     st.caption("暂无发布计划。在「内容日历」或「渠道中心」生成发布清单后自动加入。")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 # ── 平台工作台（按社交媒体切分）──
 st.subheader("平台工作台（按社交媒体切分）")
@@ -151,7 +154,7 @@ for col, (path, title, desc) in zip(cols, platform_modules):
         )
         st.page_link(path, label=f"进入{title} →")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 # ── 功能入口 ──
 st.subheader("核心生产模块")
@@ -174,7 +177,7 @@ for col, (path, title, desc) in zip(cols, core_modules):
         )
         st.page_link(path, label=f"进入{title} →")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 # ── 运营与辅助模块 ──
 st.subheader("运营与辅助模块")
@@ -201,7 +204,7 @@ for idx, (path, title, desc) in enumerate(aux_modules):
         st.page_link(path, label=f"进入{title} →")
 
 # ── 最近活动 ──
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 st.subheader("最近活动")
 
 activities = db_utils.get_recent_activities(limit=10)

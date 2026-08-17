@@ -99,9 +99,9 @@ if report:
         st.metric("分镜时间轴", "✅" if tl.get("passed") else "⚠️")
 
     st.markdown("### 关键产出")
-    st.markdown(f"**搜索词 Top3：** " + " / ".join(f"`{k['keyword']}`" for k in report["search_keywords"][:3]))
+    st.markdown("**搜索词 Top3：** " + " / ".join(f"`{k['keyword']}`" for k in report["search_keywords"][:3]))
     st.markdown(f"**5 秒钩子：** {report['play'].get('five_sec_hook', '')}")
-    st.markdown(f"**合规结论：** " + "；".join(
+    st.markdown("**合规结论：** " + "；".join(
         f"{ch} {'✅' if v['red_lines'].get('passed') else '⚠️'}" for ch, v in report["compliance"].items()
     ))
 

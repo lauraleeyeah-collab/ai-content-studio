@@ -12,7 +12,7 @@ import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from agents.video_script_storyboarder import generate_video_script, DURATION_TEMPLATES
+from agents.video_script_storyboarder import generate_video_script
 from agents.video_gen_prompt_builder import build_video_gen_prompts, build_prompt_export_markdown, get_model_options
 from agents.video_play_optimizer import optimize_video_play
 from agents.video_interaction_strategist import generate_video_interaction
@@ -20,7 +20,7 @@ from agents.title_optimizer import generate_title_variants
 from agents.cover_prompt_generator import generate_cover_prompt
 from agents.search_keyword_analyzer import analyze_search_keywords
 from database import db_utils
-from utils.rule_checks import check_title_keywords, scan_red_lines
+from utils.rule_checks import check_title_keywords
 from utils.ui_components import inject_custom_css
 from utils.demo_data import render_demo_toggle, DEMO_TOPIC
 

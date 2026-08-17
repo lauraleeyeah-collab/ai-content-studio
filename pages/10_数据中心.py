@@ -6,7 +6,6 @@
 """
 import csv
 import io
-import json
 import os
 import sys
 
@@ -15,7 +14,7 @@ import streamlit as st
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from database import db_utils
-from agents.attribution_analyzer import analyze_attribution, compute_attribution
+from agents.attribution_analyzer import analyze_attribution
 from utils.ui_components import inject_custom_css
 from utils.demo_data import render_demo_toggle, DEMO_METRICS
 

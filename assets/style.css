@@ -460,3 +460,6 @@ section[data-testid="stSidebar"] .sidebar-header {
         font-size: 24px;
     }
 }
+
+/* 段落间距 */
+.spacer { height: 20px; }

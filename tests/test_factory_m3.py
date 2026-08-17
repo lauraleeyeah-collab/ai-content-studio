@@ -124,7 +124,7 @@ def test_externalized_edit_takes_effect():
     """外置化生效：编辑 DB 的 collect_keywords → platform_workshop 读取到新值。"""
     db_utils.init_db()
     db_utils.init_channels()
-    from agents.platform_workshop import get_collect_keywords, get_share_keywords, get_platform_spec
+    from agents.platform_workshop import get_collect_keywords, get_platform_spec
 
     original = db_utils.get_channel_rule("小红书")["collect_keywords"]
     try:

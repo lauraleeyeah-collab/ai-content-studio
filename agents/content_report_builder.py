@@ -14,7 +14,6 @@ from agents.interaction_copywriter import generate_interaction_copy
 from agents.video_script_storyboarder import generate_video_script
 from agents.video_play_optimizer import optimize_video_play
 from agents.channel_rewriter import rewrite_multi_channel, ALL_CHANNELS
-from agents.compliance_checker import check_compliance
 from utils.rule_checks import check_title_keywords
 
 DEFAULT_CHANNELS = ["小红书", "抖音", "视频号"]

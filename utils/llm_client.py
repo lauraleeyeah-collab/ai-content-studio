@@ -5,12 +5,20 @@
 使用DashScope的OpenAI兼容模式调用,需要在环境变量里设置DASHSCOPE_API_KEY。
 """
 import json
+import logging
 import os
 import re
+import time
 
 from config import MODEL_NAME, VISION_MODEL_NAME, DASHSCOPE_BASE_URL
 
 _client = None
+logger = logging.getLogger(__name__)
+
+# 稳定运行参数：超时、网络错误重试次数与退避基数
+REQUEST_TIMEOUT = float(os.environ.get("LLM_TIMEOUT", "60"))
+MAX_NETWORK_RETRIES = 3
+RETRY_BACKOFF_BASE = 1.5
 
 
 def _get_client():
@@ -31,8 +39,41 @@ def _get_client():
                 "未检测到环境变量DASHSCOPE_API_KEY,请先在阿里云百炼/DashScope控制台"
                 "获取API Key,并设置到环境变量或Streamlit侧边栏的输入框里。"
             )
-        _client = OpenAI(api_key=api_key, base_url=DASHSCOPE_BASE_URL)
+        _client = OpenAI(api_key=api_key, base_url=DASHSCOPE_BASE_URL, timeout=REQUEST_TIMEOUT)
     return _client
+
+
+def _call_with_retry(fn, *args, **kwargs):
+    """
+    调用 OpenAI 客户端方法，对连接/超时/限流/5xx 错误做指数退避重试。
+    保持懒加载设计：openai 只在真正调用时导入，离线测试不依赖它。
+    """
+    import openai
+
+    retryable = (
+        openai.APIConnectionError,
+        openai.APITimeoutError,
+        openai.RateLimitError,
+        openai.InternalServerError,
+    )
+    attempt = 0
+    while True:
+        try:
+            return fn(*args, **kwargs)
+        except retryable as exc:
+            attempt += 1
+            if attempt > MAX_NETWORK_RETRIES:
+                logger.error("LLM 调用重试 %d 次后仍失败: %s", MAX_NETWORK_RETRIES, exc)
+                raise
+            wait = RETRY_BACKOFF_BASE ** attempt
+            logger.warning(
+                "LLM 调用失败(%s)，%.1fs 后重试 %d/%d",
+                type(exc).__name__,
+                wait,
+                attempt,
+                MAX_NETWORK_RETRIES,
+            )
+            time.sleep(wait)
 
 
 def call_llm(system_prompt: str, user_prompt: str, temperature: float = 0.5, max_tokens: int = 2000) -> str:
@@ -44,7 +85,9 @@ def call_llm(system_prompt: str, user_prompt: str, temperature: float = 0.5, max
         return get_demo_response(system_prompt, user_prompt)
 
     client = _get_client()
-    response = client.chat.completions.create(
+    logger.info("LLM 调用 model=%s temperature=%s max_tokens=%s", MODEL_NAME, temperature, max_tokens)
+    response = _call_with_retry(
+        client.chat.completions.create,
         model=MODEL_NAME,
         messages=[
             {"role": "system", "content": system_prompt},
@@ -179,7 +222,9 @@ def call_llm_with_images(
     # 再添加文本
     content_parts.append({"type": "text", "text": user_prompt})
 
-    response = client.chat.completions.create(
+    logger.info("视觉模型调用 model=%s temperature=%s", VISION_MODEL_NAME, temperature)
+    response = _call_with_retry(
+        client.chat.completions.create,
         model=VISION_MODEL_NAME,
         messages=[
             {"role": "system", "content": system_prompt},

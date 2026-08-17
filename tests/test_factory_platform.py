@@ -13,7 +13,6 @@ from agents.platform_workshop import produce_for_platform, PLATFORMS, PLATFORM_S
 
 def test_all_platforms_end_to_end():
     """公众号/知乎/小红书 3 平台端到端：产出完整、检查全过。"""
-    from agents.platform_workshop import produce_for_platform
 
     topic = {"title": "用AI写周报被领导点名表扬", "angle": "真实使用记录", "content": "3个AI写周报提示词技巧"}
     for p in PLATFORMS:
@@ -37,7 +36,6 @@ def test_all_platforms_end_to_end():
 
 def test_platform_validation():
     """非法平台名应报错。"""
-    from agents.platform_workshop import produce_for_platform
     try:
         produce_for_platform("抖音", "赛道", "标题", "", "", "")
         raise AssertionError("应拒绝未接入平台")

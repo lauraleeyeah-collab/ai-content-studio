@@ -95,7 +95,7 @@ def test_trend_and_account():
     trend = summarize_trends(TRACK, notes, "最近7天")
     assert "computed_stats" in trend and "llm_summary" in trend
     assert isinstance(trend["llm_summary"]["dominant_themes"], list)
-    print(f"[9] 趋势分析: 统计+LLM摘要 通过")
+    print("[9] 趋势分析: 统计+LLM摘要 通过")
 
     account = analyze_account(
         TRACK,
@@ -104,7 +104,7 @@ def test_trend_and_account():
     )
     assert "computed_stats" in account and "llm_analysis" in account
     assert len(account["llm_analysis"]["strengths"]) >= 3
-    print(f"[10] 竞品分析: 统计+LLM分析 通过")
+    print("[10] 竞品分析: 统计+LLM分析 通过")
 
 
 def test_image_extractor():

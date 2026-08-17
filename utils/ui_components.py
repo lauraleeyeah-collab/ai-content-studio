@@ -1,6 +1,7 @@
 """
 可复用的 Streamlit UI 组件,避免各页面重复渲染逻辑。
 """
+from html import escape
 import os
 
 import streamlit as st
@@ -31,18 +32,19 @@ def render_metric_card(label: str, value, delta: str = None, icon: str = None):
     delta: 变化值描述,如"+12%"
     icon: emoji图标
     """
+    value_html = escape(str(value), quote=True)
+    label_html = escape(label, quote=True)
+    icon_html = escape(icon, quote=True) if icon else ""
     delta_html = ""
     if delta:
         css_class = "positive" if delta.startswith("+") else "negative"
-        delta_html = f'<div class="metric-delta {css_class}">{delta}</div>'
-
-    icon_html = f'<div class="metric-icon">{icon}</div>' if icon else ""
+        delta_html = f'<div class="metric-delta {css_class}">{escape(delta, quote=True)}</div>'
 
     html = f"""
     <div class="metric-card">
         {icon_html}
-        <div class="metric-value">{value}</div>
-        <div class="metric-label">{label}</div>
+        <div class="metric-value">{value_html}</div>
+        <div class="metric-label">{label_html}</div>
         {delta_html}
     </div>
     """
@@ -53,11 +55,12 @@ def render_metric_card(label: str, value, delta: str = None, icon: str = None):
 
 def render_grade_badge(grade: str, total_score: float = None):
     """渲染等级圆形徽章(S/A/B/C/D)。"""
+    grade_html = escape(grade, quote=True)
     score_text = f"{total_score:.1f}/50" if total_score is not None else ""
     html = f"""
     <div class="text-center">
-        <div class="grade-badge grade-{grade}">{grade}</div>
-        <div class="grade-score">{score_text}</div>
+        <div class="grade-badge grade-{grade_html}">{grade_html}</div>
+        <div class="grade-score">{escape(score_text, quote=True)}</div>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -67,11 +70,12 @@ def render_grade_badge(grade: str, total_score: float = None):
 
 def render_score_bar(label: str, score: float, max_score: int = 10):
     """渲染一条水平评分进度条。"""
+    label_html = escape(label, quote=True)
     pct = min(score / max_score * 100, 100)
     html = f"""
     <div class="score-bar-container">
         <div class="score-bar-label">
-            <span>{label}</span>
+            <span>{label_html}</span>
             <span class="score-value">{score}/{max_score}</span>
         </div>
         <div class="score-bar">
@@ -101,10 +105,10 @@ def render_dimension_card(dimension_key: str, score_data: dict):
     渲染单个维度评分卡片。
     score_data: {"score": N, "reason": "...", "suggestion": "..."}
     """
-    label = DIMENSION_LABELS.get(dimension_key, dimension_key)
+    label = escape(DIMENSION_LABELS.get(dimension_key, dimension_key), quote=True)
     score = score_data.get("score", 0)
-    reason = score_data.get("reason", "")
-    suggestion = score_data.get("suggestion", "")
+    reason = escape(score_data.get("reason", ""), quote=True)
+    suggestion = escape(score_data.get("suggestion", ""), quote=True)
 
     suggestion_html = ""
     if suggestion:
@@ -178,7 +182,7 @@ def render_priority_list(items: list):
             key = item[0]
         else:
             key = item
-        label = DIMENSION_LABELS.get(key, key)
+        label = escape(DIMENSION_LABELS.get(key, key), quote=True)
         if i == 0:
             css_class = "high"
         elif i == 1:
@@ -198,10 +202,12 @@ def render_trend_card(title: str, content: str, direction: str = "neutral"):
     direction: "up"(兴起) / "down"(衰退) / "neutral"
     """
     css_class = f"trend-{direction}"
+    title_html = escape(title, quote=True)
+    content_html = escape(content, quote=True)
     html = f"""
     <div class="trend-card {css_class}">
-        <div class="trend-title">{title}</div>
-        <div class="trend-content">{content}</div>
+        <div class="trend-title">{title_html}</div>
+        <div class="trend-content">{content_html}</div>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -211,7 +217,8 @@ def render_trend_card(title: str, content: str, direction: str = "neutral"):
 
 def render_verdict_badge(verdict: str):
     """渲染标题判定徽章(推荐/可用/不推荐)。"""
-    html = f'<span class="verdict-badge verdict-{verdict}">{verdict}</span>'
+    verdict_html = escape(verdict, quote=True)
+    html = f'<span class="verdict-badge verdict-{verdict_html}">{verdict_html}</span>'
     st.markdown(html, unsafe_allow_html=True)
 
 
@@ -220,15 +227,18 @@ def render_verdict_badge(verdict: str):
 def render_action_card(icon: str, title: str, description: str, page_path: str = None):
     """渲染 Dashboard 功能入口卡片。点击后跳转到指定页面。"""
     if page_path:
-        onclick = f"window.parent.location.href = '{page_path}'"
+        onclick = f"window.parent.location.href = '{escape(page_path, quote=True)}'"
     else:
         onclick = ""
+    icon_html = escape(icon, quote=True)
+    title_html = escape(title, quote=True)
+    desc_html = escape(description, quote=True)
 
     html = f"""
     <div class="action-card" onclick="{onclick}" style="cursor: pointer;">
-        <div class="action-icon">{icon}</div>
-        <div class="action-title">{title}</div>
-        <div class="action-desc">{description}</div>
+        <div class="action-icon">{icon_html}</div>
+        <div class="action-title">{title_html}</div>
+        <div class="action-desc">{desc_html}</div>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)

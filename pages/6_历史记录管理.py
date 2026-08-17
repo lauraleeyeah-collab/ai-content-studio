@@ -47,7 +47,7 @@ with cols[2]:
 with cols[3]:
     render_metric_card("竞品账号", stats.get("competitor_accounts_count", 0), icon="")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 # ── 赛道筛选 ──
 tracks = set()
@@ -61,7 +61,7 @@ for table, _, getter_name in TYPES:
 track_options = ["全部"] + sorted(tracks)
 filter_track = st.selectbox("按赛道筛选", track_options)
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.html('<div class="spacer"></div>')
 
 tabs = st.tabs([label for _, label, _ in TYPES])
 

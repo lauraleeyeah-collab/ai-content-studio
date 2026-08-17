@@ -8,7 +8,7 @@ import os
 
 import streamlit as st
 
-from agents.platform_workshop import produce_for_platform, PLATFORM_SPECS
+from agents.platform_workshop import produce_for_platform
 from database import db_utils
 from utils.demo_data import render_demo_toggle
 
