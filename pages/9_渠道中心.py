@@ -73,12 +73,25 @@ with tab1:
             prefs = st.text_area("内容偏好", value=ch.get("content_prefs", ""), key=f"prefs_{ch['name']}", height=80)
             red = st.text_area("红线", value=ch.get("red_lines", ""), key=f"red_{ch['name']}", height=60)
             bp = st.text_area("最佳实践", value=ch.get("best_practices", ""), key=f"bp_{ch['name']}", height=80)
+            spec = st.text_area("平台规格（封面/正文/标题/互动机制，供平台工作台使用）",
+                                value=ch.get("platform_spec", ""), key=f"spec_{ch['name']}", height=100)
+            ck = st.text_input("收藏引导关键词（逗号分隔）", value=ch.get("collect_keywords", ""), key=f"ck_{ch['name']}")
+            sk = st.text_input("分享引导关键词（逗号分隔）", value=ch.get("share_keywords", ""), key=f"sk_{ch['name']}")
+            cw1, cw2 = st.columns(2)
+            with cw1:
+                cmin = st.number_input("正文字数下限", min_value=0, value=int(ch.get("copy_min_words") or 0),
+                                       key=f"cmin_{ch['name']}")
+            with cw2:
+                cmax = st.number_input("正文字数上限", min_value=0, value=int(ch.get("copy_max_words") or 0),
+                                       key=f"cmax_{ch['name']}")
             label_req = st.checkbox("强制 AI 标注", value=bool(ch.get("ai_label_required")), key=f"label_{ch['name']}")
             if st.button("保存规则", key=f"save_{ch['name']}"):
                 db_utils.update_channel_rule(
                     ch["name"],
                     algorithm_weights=algo, content_prefs=prefs,
                     red_lines=red, best_practices=bp,
+                    platform_spec=spec, collect_keywords=ck, share_keywords=sk,
+                    copy_min_words=int(cmin), copy_max_words=int(cmax),
                     ai_label_required=1 if label_req else 0,
                 )
                 st.success(f"{ch['name']} 规则已更新。")

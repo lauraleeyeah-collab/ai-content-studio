@@ -165,6 +165,8 @@ CREATE TABLE IF NOT EXISTS content_assets (
 -- ========== AI 超级自媒体工具（M3 渠道中心） ==========
 
 -- 6 平台规则库：算法权重/内容偏好/红线/AI标注要求/最佳实践（可编辑、可迭代）
+-- platform_spec/collect_keywords/share_keywords/copy_min_words/copy_max_words
+-- 为「规则库外置化」新增：平台工作台规格、互动关键词、正文字数区间全部入库
 CREATE TABLE IF NOT EXISTS channels (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE,
@@ -173,6 +175,11 @@ CREATE TABLE IF NOT EXISTS channels (
     red_lines TEXT,
     ai_label_required INTEGER DEFAULT 1,
     best_practices TEXT,
+    platform_spec TEXT,
+    collect_keywords TEXT,
+    share_keywords TEXT,
+    copy_min_words INTEGER,
+    copy_max_words INTEGER,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

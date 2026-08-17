@@ -77,28 +77,49 @@ def check_copy_word_count(text: str, channel: str, tolerance: int = 100) -> dict
     """
     校验正文长度是否在平台合理区间（±tolerance 容忍）。
     不满足时给出建议方向，不拦截（正文长短由创作意图决定）。
+
+    字数区间优先从 channels 表读取（规则库外置化），DB 不可用时回退常量。
+    未知平台回退到小红书区间（保持向后兼容）。
     """
-    channel = channel if channel in PLATFORM_COPY_RANGES else "小红书"
-    min_words, max_words = PLATFORM_COPY_RANGES[channel]
+    min_words, max_words, resolved_channel = _get_copy_range(channel)
     chars = _count_chars(text)
 
     status = "ok"
     suggestion = ""
     if chars < min_words - tolerance:
         status = "too_short"
-        suggestion = f"正文偏短（{chars} 字），{channel} 建议 {min_words}-{max_words} 字，可补充步骤细节或案例。"
+        suggestion = f"正文偏短（{chars} 字），{resolved_channel} 建议 {min_words}-{max_words} 字，可补充步骤细节或案例。"
     elif chars > max_words + tolerance:
         status = "too_long"
-        suggestion = f"正文偏长（{chars} 字），{channel} 建议 {min_words}-{max_words} 字，可拆分系列或精简表达。"
+        suggestion = f"正文偏长（{chars} 字），{resolved_channel} 建议 {min_words}-{max_words} 字，可拆分系列或精简表达。"
 
     return {
-        "channel": channel,
+        "channel": resolved_channel,
         "chars": chars,
         "min_words": min_words,
         "max_words": max_words,
         "status": status,
         "suggestion": suggestion,
     }
+
+
+def _get_copy_range(channel: str) -> tuple:
+    """
+    取平台正文字数区间，优先 DB，回退常量，未知平台回退小红书。
+    返回 (min_words, max_words, resolved_channel)。
+    """
+    # 优先从 channels 表读（规则库外置化后页面编辑即时生效）
+    try:
+        from database import db_utils
+        row = db_utils.get_channel_rule(channel)
+        if row and row.get("copy_min_words") is not None and row.get("copy_max_words") is not None:
+            return int(row["copy_min_words"]), int(row["copy_max_words"]), channel
+    except Exception:
+        pass
+    # 回退常量
+    if channel in PLATFORM_COPY_RANGES:
+        return PLATFORM_COPY_RANGES[channel][0], PLATFORM_COPY_RANGES[channel][1], channel
+    return PLATFORM_COPY_RANGES["小红书"][0], PLATFORM_COPY_RANGES["小红书"][1], "小红书"
 
 
 def scan_red_lines(text: str) -> dict:

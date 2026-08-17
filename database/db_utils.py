@@ -621,21 +621,49 @@ def get_assets_by_topic(topic_title: str, limit: int = 50) -> list:
 # ══════════════════════════════════════════════
 
 def init_channels() -> int:
-    """初始化 6 平台规则库（已存在则跳过），返回本次插入条数。"""
+    """
+    初始化 6 平台规则库（已存在则跳过），返回本次插入条数。
+
+    旧库迁移场景：平台行已存在但新字段（platform_spec/collect_keywords 等）为空，
+    用种子数据回填，保证规则库外置化后数据完整。
+    """
     from database.channel_rules import get_default_rules
     inserted = 0
+    backfilled = 0
     with get_connection() as conn:
         for rule in get_default_rules():
-            exists = conn.execute("SELECT id FROM channels WHERE name = ?", (rule["name"],)).fetchone()
-            if exists:
+            row = conn.execute(
+                "SELECT id, platform_spec, collect_keywords, share_keywords, copy_min_words, copy_max_words "
+                "FROM channels WHERE name = ?",
+                (rule["name"],),
+            ).fetchone()
+            if row is None:
+                conn.execute(
+                    "INSERT INTO channels (name, algorithm_weights, content_prefs, red_lines, ai_label_required, "
+                    "best_practices, platform_spec, collect_keywords, share_keywords, copy_min_words, copy_max_words) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (rule["name"], rule["algorithm_weights"], rule["content_prefs"],
+                     rule["red_lines"], rule["ai_label_required"], rule["best_practices"],
+                     rule.get("platform_spec", ""), rule.get("collect_keywords", ""),
+                     rule.get("share_keywords", ""), rule.get("copy_min_words"),
+                     rule.get("copy_max_words")),
+                )
+                inserted += 1
                 continue
-            conn.execute(
-                "INSERT INTO channels (name, algorithm_weights, content_prefs, red_lines, ai_label_required, best_practices) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                (rule["name"], rule["algorithm_weights"], rule["content_prefs"],
-                 rule["red_lines"], rule["ai_label_required"], rule["best_practices"]),
-            )
-            inserted += 1
+            # 旧库回填：任一新字段为空则补齐（不覆盖用户已编辑的老字段）
+            if not row["platform_spec"] or not row["collect_keywords"] or row["copy_min_words"] is None:
+                conn.execute(
+                    "UPDATE channels SET platform_spec = COALESCE(NULLIF(platform_spec, ''), ?), "
+                    "collect_keywords = COALESCE(NULLIF(collect_keywords, ''), ?), "
+                    "share_keywords = COALESCE(NULLIF(share_keywords, ''), ?), "
+                    "copy_min_words = COALESCE(copy_min_words, ?), "
+                    "copy_max_words = COALESCE(copy_max_words, ?) "
+                    "WHERE id = ?",
+                    (rule.get("platform_spec", ""), rule.get("collect_keywords", ""),
+                     rule.get("share_keywords", ""), rule.get("copy_min_words"),
+                     rule.get("copy_max_words"), row["id"]),
+                )
+                backfilled += 1
     return inserted
 
 
@@ -654,8 +682,11 @@ def get_channel_rule(channel_name: str) -> dict:
 
 
 def update_channel_rule(channel_name: str, **fields) -> None:
-    """更新平台规则卡的可编辑字段。"""
-    allowed = {"algorithm_weights", "content_prefs", "red_lines", "ai_label_required", "best_practices"}
+    """更新平台规则卡的可编辑字段（含外置化新增字段）。"""
+    allowed = {
+        "algorithm_weights", "content_prefs", "red_lines", "ai_label_required", "best_practices",
+        "platform_spec", "collect_keywords", "share_keywords", "copy_min_words", "copy_max_words",
+    }
     updates = {k: v for k, v in fields.items() if k in allowed}
     if not updates:
         return
@@ -895,11 +926,25 @@ def ensure_default_persona() -> None:
 # ══════════════════════════════════════════════
 
 def migrate_schema() -> None:
-    """轻量迁移：为已存在的 content_assets 表补充 status 列（幂等）。"""
+    """轻量迁移（幂等）：为已存在的表补充新增列。"""
     with get_connection() as conn:
+        # content_assets.status
         cols = [r["name"] for r in conn.execute("PRAGMA table_info(content_assets)").fetchall()]
         if "status" not in cols:
             conn.execute("ALTER TABLE content_assets ADD COLUMN status TEXT DEFAULT 'idea'")
+
+        # channels 规则库外置化新增列（旧库补列，新库由 schema.sql 直接建好）
+        ch_cols = [r["name"] for r in conn.execute("PRAGMA table_info(channels)").fetchall()]
+        if "platform_spec" not in ch_cols:
+            conn.execute("ALTER TABLE channels ADD COLUMN platform_spec TEXT")
+        if "collect_keywords" not in ch_cols:
+            conn.execute("ALTER TABLE channels ADD COLUMN collect_keywords TEXT")
+        if "share_keywords" not in ch_cols:
+            conn.execute("ALTER TABLE channels ADD COLUMN share_keywords TEXT")
+        if "copy_min_words" not in ch_cols:
+            conn.execute("ALTER TABLE channels ADD COLUMN copy_min_words INTEGER")
+        if "copy_max_words" not in ch_cols:
+            conn.execute("ALTER TABLE channels ADD COLUMN copy_max_words INTEGER")
 
 
 def save_topic_to_library(track: str, title: str, angle: str = "", content: str = "", status: str = "idea") -> int:

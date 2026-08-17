@@ -5,16 +5,23 @@
 选题角度 → 标题方案 → 封面提示词 → 平台正文 → 互动策略，
 输出平台专属生产报告。LLM 负责按平台规则生成，Python 负责
 关键词检查、封面规格、字数、互动引导等确定性兜底。
+
+规则库外置化：平台规格/互动关键词/字数区间全部从 channels 表读取，
+页面编辑后即时生效；种子常量 PLATFORM_SPECS/COLLECT_KEYWORDS/SHARE_KEYWORDS
+仅作为 DB 不可用时的 fallback。
 """
 from prompts import platform_workshop_prompt
 from database.channel_rules import get_default_rules
+from database import db_utils
 from utils.llm_client import call_llm_json
 from utils.rule_checks import check_title_keywords, check_copy_word_count
 from config import TEMPERATURE_CONFIG
 from agents.search_keyword_analyzer import analyze_search_keywords
 
+# 当前已开放独立工作台的平台（工作台页面的白名单）
 PLATFORMS = ["小红书", "公众号", "知乎"]
 
+# ── 以下常量仅作 DB 不可用时的 fallback，生产数据以 channels 表为准 ──
 PLATFORM_SPECS = {
     "小红书": (
         "封面：3:4 竖版 1080×1440，人物/产品居中偏右，顶部 1/3 留文字位，文字大且高对比；"
@@ -33,7 +40,6 @@ PLATFORM_SPECS = {
     ),
 }
 
-# 平台互动引导检查：必须命中至少一条显性行动指令
 COLLECT_KEYWORDS = {
     "小红书": ["收藏"],
     "公众号": ["收藏", "在看", "划线"],
@@ -46,29 +52,66 @@ SHARE_KEYWORDS = {
 }
 
 
+def _split_csv(text: str) -> list:
+    """逗号分隔字符串 → 去空去重的列表。"""
+    return [s.strip() for s in (text or "").split(",") if s.strip()]
+
+
+def _get_channel_row(platform: str) -> dict:
+    """从 DB 取平台规则卡整行；DB 不可用时回退种子。"""
+    try:
+        row = db_utils.get_channel_rule(platform)
+        if row:
+            return row
+    except Exception:
+        pass
+    return next((r for r in get_default_rules() if r["name"] == platform), {})
+
+
+def get_platform_spec(platform: str) -> str:
+    """平台工作台规格（封面/正文/标题/互动机制），优先读 DB。"""
+    row = _get_channel_row(platform)
+    spec = row.get("platform_spec") if row else ""
+    return spec or PLATFORM_SPECS.get(platform, "")
+
+
+def get_collect_keywords(platform: str) -> list:
+    """收藏引导关键词，优先读 DB。"""
+    row = _get_channel_row(platform)
+    kw = _split_csv(row.get("collect_keywords", "")) if row else []
+    return kw or COLLECT_KEYWORDS.get(platform, [])
+
+
+def get_share_keywords(platform: str) -> list:
+    """分享引导关键词，优先读 DB。"""
+    row = _get_channel_row(platform)
+    kw = _split_csv(row.get("share_keywords", "")) if row else []
+    return kw or SHARE_KEYWORDS.get(platform, [])
+
+
 def _get_rule_card(platform: str) -> str:
-    """从平台规则库取规则卡文本。"""
-    for rule in get_default_rules():
-        if rule["name"] == platform:
-            return (
-                f"算法权重：{rule['algorithm_weights']}\n"
-                f"内容偏好：{rule['content_prefs']}\n"
-                f"红线：{rule['red_lines']}\n"
-                f"最佳实践：{rule['best_practices']}"
-            )
+    """从平台规则库取规则卡文本（优先 DB，页面编辑后即时生效）。"""
+    row = _get_channel_row(platform)
+    if row and row.get("algorithm_weights"):
+        return (
+            f"算法权重：{row['algorithm_weights']}\n"
+            f"内容偏好：{row['content_prefs']}\n"
+            f"红线：{row['red_lines']}\n"
+            f"最佳实践：{row['best_practices']}"
+        )
     return "无规则卡"
 
 
 def _check_interaction_guides(platform: str, interaction: dict) -> dict:
-    """互动策略确定性检查：收藏/分享/评论引导是否齐全。"""
+    """互动策略确定性检查：收藏/分享/评论引导是否齐全（关键词从 DB 读取）。"""
     collect_reasons = interaction.get("collect_reasons", []) or []
     share_guides = interaction.get("share_guides", []) or []
     comment_guides = interaction.get("comment_guides", []) or []
     cta = " ".join(interaction.get("cta_suggestions", []) or []) or ""
 
-    kw = COLLECT_KEYWORDS.get(platform, [])
+    kw = get_collect_keywords(platform)
     collect_hit = any(k in (t + cta) for k in kw for t in collect_reasons) or any(k in cta for k in kw)
-    share_hit = any(k in (s + cta) for k in SHARE_KEYWORDS.get(platform, []) for s in share_guides)
+    share_hit = any(k in (s + cta) for k in get_share_keywords(platform) for s in share_guides)
 
     return {
         "collect_cta": {
@@ -108,6 +151,9 @@ def produce_for_platform(
     if platform not in PLATFORMS:
         raise ValueError(f"平台必须是 {PLATFORMS} 之一，当前: {platform}")
 
+    # 平台规格从 DB 读取（外置化：页面编辑规则库后即时生效）
+    spec = get_platform_spec(platform)
+
     # 1. 搜索词（复用 M1 确定性兜底）
     keywords = analyze_search_keywords(track, topic_title, topic_angle, persona_description)
     kw_list = [k["keyword"] for k in keywords]
@@ -116,7 +162,7 @@ def produce_for_platform(
     system_prompt = platform_workshop_prompt.SYSTEM_PROMPT.format(
         platform=platform,
         rule_card=_get_rule_card(platform),
-        platform_spec=PLATFORM_SPECS[platform],
+        platform_spec=spec,
     )
     user_prompt = platform_workshop_prompt.USER_PROMPT_TEMPLATE.format(
         platform=platform,
@@ -142,7 +188,7 @@ def produce_for_platform(
 
     cover = result.get("cover", {}) or {}
     cover.setdefault("spec_note", "")
-    cover["platform_spec"] = PLATFORM_SPECS[platform]
+    cover["platform_spec"] = spec
 
     copy = result.get("copy", {}) or {}
     copy_text = copy.get("content", "")
@@ -163,7 +209,7 @@ def produce_for_platform(
         "interaction": interaction,
         "topic_angles": topic_angles,
         "rule_card": _get_rule_card(platform),
-        "platform_spec": PLATFORM_SPECS[platform],
+        "platform_spec": spec,
         "checks": {
             "titles": [t.get("keyword_check", {}) for t in titles],
             "copy_word_count": copy.get("word_count", {}),
