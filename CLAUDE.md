@@ -17,8 +17,8 @@ python -m tests.test_pipeline_mock
 # Run demo-mode end-to-end tests (covers all 8 agents)
 XHS_DEMO_MODE=1 python -m tests.test_demo_mode
 
-# Run from a specific directory
-cd /Users/yuri/xiaohongshu-ai-agent
+# Run from the repository root
+cd /path/to/ai-content-studio
 streamlit run app.py
 
 # Run the app in demo mode (no API key needed, for interviews/offline demo)

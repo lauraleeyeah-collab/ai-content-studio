@@ -1,13 +1,18 @@
-# 小红书爆款拆解与选题文案生成工具（Multi-Agent）
+# AI 超级自媒体工具（AI Content Studio）
 
-> 🚀 已升级为「AI 超级自媒体工具」（M1-M4 + P1 + 内容报告 + 视频提示词 + 选题库/CSV导入 + 批量生产 + 平台工作台 全部落地）。
-> 当前 18 个页面、20 张表、11 个测试模块全绿。
-> 产品规划见 `docs/PRD-AI超级自媒体工具.md`，调研依据见 `docs/调研报告-2026平台生态与AI趋势.md`。
-> 定位：一次生产，多平台适配，数据反哺。核心差异化是「渠道中心」——按平台规则改写而不是复制粘贴。
+> 一次生产，多平台适配，数据反哺。把热点笔记拆解成可复用的爆款套路，再结合账号人设自动生成选题、图文/视频内容，并按 6 个平台规则改写适配。
+> 核心差异化：「渠道中心」按平台规则改写而不是复制粘贴。
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![CI](https://github.com/USERNAME/ai-content-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/ai-content-studio/actions)
 
+<!-- 上架后把上面链接里的 USERNAME 替换为你的 GitHub 用户名 -->
 
-一个 **5-Agent 流水线 + 5 大内容分析模块** 的小红书内容创作工作台：把热点笔记拆解成可复用的爆款套路，再结合账号人设自动生成选题和文案。
+**功能状态**：M1-M4 + P1 + 内容报告 + 视频提示词 + 选题库/CSV 导入 + 批量生产 + 平台工作台全部落地；18 个页面、20 张表、11 个测试模块全绿。
+**产品规划**：见 `docs/PRD-AI超级自媒体工具.md`；调研依据见 `docs/调研报告-2026平台生态与AI趋势.md`。
+
+一个 **5-Agent 流水线 + 5 大内容分析模块** 的内容创作工作台：把热点笔记拆解成可复用的爆款套路，再结合账号人设自动生成选题和文案。
 
 核心设计原则：**LLM 负责判断，Python 负责计算**。模型的打分、排序、比例核验、等级判定等关键环节全部由确定性代码兜底，保证结果可复现、可解释、可审计。
 
@@ -56,6 +61,25 @@ Agent3 选题生成 —— 借鉴溯源 + 人设适配 + 历史去重，代码�
 Agent4 文案生成 —— 按风格特征说明（style_guide）生成图文或视频文案
 ```
 
+## 架构总览
+
+```mermaid
+flowchart LR
+    A[用户粘贴原始笔记] --> B[Agent0 采集/结构化<br/>字段标准化]
+    B --> C[Agent1 热点筛选<br/>5维打分 + 确定性排序]
+    C --> D[Agent2 爆款拆解]
+    D --> E[Agent3 选题生成<br/>人设适配 + 历史去重]
+    E --> F[Agent4 文案生成<br/>风格语料驱动]
+    F --> G[图文工厂 M1<br/>标题/封面/正文/互动]
+    F --> H[视频工厂 M2<br/>分镜/播放优化/提示词]
+    G --> I[渠道中心 M3<br/>6平台规则改写 + 合规检查]
+    H --> I
+    I --> J[数据中心 M4<br/>数据回填 + 爆款归因]
+    J --> B
+```
+
+设计原则：**LLM 负责判断，Python 负责计算**。打分、排序、比例核验、等级判定等关键环节全部由确定性代码兜底，保证结果可复现、可解释、可审计。
+
 ## 设计亮点（面试可展开讲）
 
 1. **确定性兜底**：`Agent1` 的 5 维打分加总/归一化/平局排序、`Agent3` 的视频图文比例核验、`Note Scorer` 的加权总分/等级判定，全部由 Python 代码计算，模型只做主观判断，杜绝 LLM 算数不稳定问题。
@@ -71,6 +95,29 @@ Agent4 文案生成 —— 按风格特征说明（style_guide）生成图文或
 - **数据库**：SQLite（免部署、适合个人工具）
 - **可视化**：Plotly（雷达图、趋势图、标签共现图）
 - **测试**：unittest + mock（离线测试不依赖 API Key）
+
+## 目录结构
+
+```text
+.
+├── app.py                # Streamlit 主入口（工作台首页）
+├── agents/               # 25 个 Agent，一 Agent 一文件
+├── prompts/              # Prompt 模板（与代码分离，可迭代）
+├── database/             # SQLite 数据访问层（按领域拆分）
+│   ├── connection.py     # 连接与 Schema 迁移
+│   ├── topics.py         # 选题 / 文案 / 风格语料
+│   ├── notes.py          # 笔记分析 / 竞品 / 趋势 / 标题 / 标签
+│   ├── channels.py       # 渠道 / 内容资产 / 发布 / 平台指标
+│   ├── personas.py       # 多账号人设库
+│   ├── schedules.py      # 内容日历
+│   ├── metrics.py        # Dashboard 统计 / 历史清理
+│   └── db_utils.py       # 兼容门面（统一导出）
+├── utils/                # LLM 客户端 / 确定性校验 / UI 组件
+├── pages/                # Streamlit 多页面（17 个功能页）
+├── tests/                # 11 个测试模块（离线可跑）
+├── docs/                 # PRD 与行业调研
+└── assets/               # 样式与演示截图
+```
 
 ## 快速开始
 
@@ -154,6 +201,22 @@ DASHSCOPE_API_KEY = "你的key"
 | `QWEN_VISION_MODEL_NAME` | 视觉模型 | `qwen-vl-plus` |
 | `XHS_AGENT_DB_PATH` | 数据库路径 | `database/xhs_agent.db` |
 | `XHS_DEMO_MODE` | 演示模式（`1` 开启） | 关闭 |
+| `LLM_TIMEOUT` | 单次 LLM 请求超时（秒） | `60` |
+
+## 演示截图
+
+> 📸 截图整理中：工作台概览 / 图文工厂 / 渠道中心 / 数据中心。
+> 图片将放入 `assets/screenshots/`，并在下方展示。
+
+## Roadmap
+
+- [x] 5-Agent 热点选题流水线（采集 → 筛选 → 拆解 → 选题 → 文案）
+- [x] M1 图文工厂 / M2 视频工厂 / M3 渠道中心 / M4 数据中心
+- [x] P1 多账号中心 / 内容日历 / AI 标注自动化
+- [x] 选题库 / CSV 批量回填 / 批量生产 / 平台工作台（公众号、知乎）
+- [ ] 补充演示截图与使用视频
+- [ ] Streamlit Community Cloud 部署上线
+- [ ] 接入 LLM 可观测性（Langfuse）与评测集
 
 ## 已知限制
 
