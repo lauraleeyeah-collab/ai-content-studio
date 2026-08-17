@@ -19,7 +19,7 @@ except ImportError:
 from agents.trend_summarizer import summarize_trends
 from agents.trend_collector import collect_trends
 from database import db_utils
-from utils.ui_components import inject_custom_css, render_trend_card
+from utils.ui_components import inject_custom_css, render_trend_card, render_api_key_input
 from utils.demo_data import render_demo_toggle
 
 st.set_page_config(page_title="热门内容趋势", layout="wide")
@@ -36,10 +36,7 @@ if "trend_notes" not in st.session_state:
 with st.sidebar:
     st.markdown('<div class="sidebar-header">全局配置</div>', unsafe_allow_html=True)
     render_demo_toggle()
-    api_key = st.text_input("DashScope API Key", type="password",
-                            value=os.environ.get("DASHSCOPE_API_KEY", ""))
-    if api_key:
-        os.environ["DASHSCOPE_API_KEY"] = api_key
+    render_api_key_input()
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
 
 # ── 页面标题 ──

@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 sys.path.insert(0, os.path.dirname(__file__))
 
 from database import db_utils
-from utils.ui_components import inject_custom_css, render_metric_card
+from utils.ui_components import inject_custom_css, render_metric_card, render_api_key_input
 from utils.demo_data import render_demo_toggle
 
 st.set_page_config(page_title="AI 超级自媒体工具", layout="wide", page_icon="")
@@ -35,14 +35,7 @@ DEFAULT_PERSONA = _default_persona["persona_description"] if _default_persona el
 with st.sidebar:
     st.markdown('<div class="sidebar-header">全局配置</div>', unsafe_allow_html=True)
     demo_on = render_demo_toggle()
-    api_key_input = st.text_input(
-        "DashScope API Key",
-        type="password",
-        value=os.environ.get("DASHSCOPE_API_KEY", ""),
-        help="在阿里云百炼/DashScope控制台获取。",
-    )
-    if api_key_input:
-        os.environ["DASHSCOPE_API_KEY"] = api_key_input
+    render_api_key_input()
 
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
     persona_options = [(p["name"], p["persona_description"]) for p in db_utils.get_personas()] or [("默认", DEFAULT_PERSONA)]

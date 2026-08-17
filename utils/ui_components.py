@@ -22,6 +22,26 @@ def inject_custom_css():
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
+def render_api_key_input() -> str:
+    """
+    渲染侧栏 API Key 输入框。
+
+    环境变量 DASHSCOPE_API_KEY 已配置时不显示输入框（避免真实 Key 出现在页面上），
+    只提示已配置；未配置时显示密码输入框，填入后写入 os.environ（仅本次会话有效，不落盘）。
+    """
+    if os.environ.get("DASHSCOPE_API_KEY"):
+        st.caption("✅ API Key 已通过环境变量配置")
+        return ""
+    key_input = st.text_input(
+        "DashScope API Key",
+        type="password",
+        help="在阿里云百炼/DashScope控制台获取后填入（仅本次会话有效，不落盘）。",
+    )
+    if key_input:
+        os.environ["DASHSCOPE_API_KEY"] = key_input
+    return key_input
+
+
 # ── 指标卡片 ──
 
 def render_metric_card(label: str, value, delta: str = None, icon: str = None):

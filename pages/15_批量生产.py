@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from agents.batch_production import batch_produce, parse_bulk_topics
 from agents.content_report_builder import DEFAULT_CHANNELS
 from database import db_utils
-from utils.ui_components import inject_custom_css
+from utils.ui_components import inject_custom_css, render_api_key_input
 from utils.demo_data import render_demo_toggle
 
 DEMO_BULK_TOPICS = [
@@ -46,13 +46,7 @@ st.markdown(
 with st.sidebar:
     st.markdown('<div class="sidebar-header">批量生产</div>', unsafe_allow_html=True)
     demo_on = render_demo_toggle()
-    api_key_input = st.text_input(
-        "DashScope API Key", type="password",
-        value=os.environ.get("DASHSCOPE_API_KEY", ""),
-        help="在阿里云百炼/DashScope控制台获取。",
-    )
-    if api_key_input:
-        os.environ["DASHSCOPE_API_KEY"] = api_key_input
+    render_api_key_input()
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
     persona_description = st.text_area("账号人设描述", value=DEFAULT_PERSONA, height=100)
 

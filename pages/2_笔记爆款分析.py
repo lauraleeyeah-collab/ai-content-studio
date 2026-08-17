@@ -22,6 +22,7 @@ from utils.ui_components import (
     render_priority_list,
     DIMENSION_LABELS,
 )
+from utils.ui_components import render_api_key_input
 from utils.demo_data import render_demo_toggle
 
 st.set_page_config(page_title="笔记爆款分析", layout="wide")
@@ -39,12 +40,7 @@ if "analysis_note_data" not in st.session_state:
 with st.sidebar:
     st.markdown('<div class="sidebar-header">基础配置</div>', unsafe_allow_html=True)
     render_demo_toggle()
-    api_key_input = st.text_input(
-        "DashScope API Key", type="password",
-        value=os.environ.get("DASHSCOPE_API_KEY", ""),
-    )
-    if api_key_input:
-        os.environ["DASHSCOPE_API_KEY"] = api_key_input
+    render_api_key_input()
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
     persona_description = st.text_area("账号人设描述(可选)", value="", height=100,
                                        placeholder="描述你的账号定位、目标人群和内容方向...")

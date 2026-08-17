@@ -21,7 +21,7 @@ from agents.cover_prompt_generator import generate_cover_prompt
 from agents.search_keyword_analyzer import analyze_search_keywords
 from database import db_utils
 from utils.rule_checks import check_title_keywords
-from utils.ui_components import inject_custom_css
+from utils.ui_components import inject_custom_css, render_api_key_input
 from utils.demo_data import render_demo_toggle, DEMO_TOPIC
 
 VIDEO_CHANNELS = ["抖音", "视频号", "小红书"]
@@ -47,13 +47,7 @@ st.markdown(
 with st.sidebar:
     st.markdown('<div class="sidebar-header">视频工厂配置</div>', unsafe_allow_html=True)
     demo_on = render_demo_toggle()
-    api_key_input = st.text_input(
-        "DashScope API Key", type="password",
-        value=os.environ.get("DASHSCOPE_API_KEY", ""),
-        help="在阿里云百炼/DashScope控制台获取。",
-    )
-    if api_key_input:
-        os.environ["DASHSCOPE_API_KEY"] = api_key_input
+    render_api_key_input()
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
     persona_description = st.text_area("账号人设描述", value=DEFAULT_PERSONA, height=100)
 

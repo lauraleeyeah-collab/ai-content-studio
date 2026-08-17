@@ -4,8 +4,6 @@
 一个平台一个页面，页面只传平台名进来；渲染逻辑、入库、下载全部收敛在这里，
 避免多页面重复代码，也方便后续新增平台（如抖音、视频号工作台）。
 """
-import os
-
 import streamlit as st
 
 from agents.platform_workshop import produce_for_platform
@@ -23,7 +21,7 @@ def render_platform_workshop(platform: str) -> None:
     """渲染指定平台的工作台页面。"""
     st.set_page_config(page_title=f"{platform}工作台", layout="wide")
 
-    from utils.ui_components import inject_custom_css
+    from utils.ui_components import inject_custom_css, render_api_key_input
     inject_custom_css()
     db_utils.init_db()
     db_utils.ensure_default_persona()
@@ -45,13 +43,7 @@ def render_platform_workshop(platform: str) -> None:
     with st.sidebar:
         st.markdown(f'<div class="sidebar-header">{platform}工作台</div>', unsafe_allow_html=True)
         demo_on = render_demo_toggle()
-        api_key_input = st.text_input(
-            "DashScope API Key", type="password",
-            value=os.environ.get("DASHSCOPE_API_KEY", ""),
-            help="在阿里云百炼/DashScope控制台获取。",
-        )
-        if api_key_input:
-            os.environ["DASHSCOPE_API_KEY"] = api_key_input
+        render_api_key_input()
         track = st.text_input("赛道关键词", value="AI工具/自我提升")
         persona_description = st.text_area("账号人设描述", value=DEFAULT_PERSONA, height=100)
 

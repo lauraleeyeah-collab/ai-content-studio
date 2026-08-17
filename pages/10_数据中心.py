@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from database import db_utils
 from agents.attribution_analyzer import analyze_attribution
-from utils.ui_components import inject_custom_css
+from utils.ui_components import inject_custom_css, render_api_key_input
 from utils.demo_data import render_demo_toggle, DEMO_METRICS
 
 try:
@@ -42,13 +42,7 @@ st.markdown(
 with st.sidebar:
     st.markdown('<div class="sidebar-header">数据中心配置</div>', unsafe_allow_html=True)
     demo_on = render_demo_toggle()
-    api_key_input = st.text_input(
-        "DashScope API Key", type="password",
-        value=os.environ.get("DASHSCOPE_API_KEY", ""),
-        help="在阿里云百炼/DashScope控制台获取。",
-    )
-    if api_key_input:
-        os.environ["DASHSCOPE_API_KEY"] = api_key_input
+    render_api_key_input()
 
 tab1, tab2, tab3, tab4 = st.tabs(["① 数据回填", "② 渠道对比", "③ 爆款归因", "④ 历史管理"])
 

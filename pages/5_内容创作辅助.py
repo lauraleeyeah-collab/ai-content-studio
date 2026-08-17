@@ -26,6 +26,7 @@ from utils.ui_components import (
     render_priority_list,
     DIMENSION_LABELS,
 )
+from utils.ui_components import render_api_key_input
 from utils.demo_data import render_demo_toggle
 
 st.set_page_config(page_title="内容创作辅助", layout="wide")
@@ -38,10 +39,7 @@ db_utils.init_db()
 with st.sidebar:
     st.markdown('<div class="sidebar-header">全局配置</div>', unsafe_allow_html=True)
     render_demo_toggle()
-    api_key = st.text_input("DashScope API Key", type="password",
-                            value=os.environ.get("DASHSCOPE_API_KEY", ""))
-    if api_key:
-        os.environ["DASHSCOPE_API_KEY"] = api_key
+    render_api_key_input()
     track = st.text_input("赛道关键词", value="AI工具/自我提升")
     persona = st.text_area("账号人设描述(可选)", value="", height=100)
 
