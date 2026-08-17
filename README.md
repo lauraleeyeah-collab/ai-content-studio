@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![CI](https://github.com/USERNAME/ai-content-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/ai-content-studio/actions)
+[![CI](https://github.com/lauraleeyeah-collab/ai-content-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/lauraleeyeah-collab/ai-content-studio/actions)
 
 <!-- 上架后把上面链接里的 USERNAME 替换为你的 GitHub 用户名 -->
 
