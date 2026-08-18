@@ -7,7 +7,6 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![CI](https://github.com/lauraleeyeah-collab/ai-content-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/lauraleeyeah-collab/ai-content-studio/actions)
 
-<!-- 上架后把上面链接里的 USERNAME 替换为你的 GitHub 用户名 -->
 
 **功能状态**：M1-M4 + P1 + 内容报告 + 视频提示词 + 选题库/CSV 导入 + 批量生产 + 平台工作台全部落地；18 个页面、20 张表、11 个测试模块全绿。
 **产品规划**：见 `docs/PRD-AI超级自媒体工具.md`；调研依据见 `docs/调研报告-2026平台生态与AI趋势.md`。
